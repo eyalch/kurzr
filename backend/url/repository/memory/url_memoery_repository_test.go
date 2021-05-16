@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"shrtr/domain"
-	"shrtr/url/repository/memory"
+	"github.com/eyalch/shrtr/backend/domain"
+	"github.com/eyalch/shrtr/backend/url/repository/memory"
 )
 
 func TestGet(t *testing.T) {

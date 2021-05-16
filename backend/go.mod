@@ -1,4 +1,4 @@
-module shrtr
+module github.com/eyalch/shrtr/backend
 
 go 1.16
 

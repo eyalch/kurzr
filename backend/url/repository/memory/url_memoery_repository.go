@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"shrtr/domain"
+	"github.com/eyalch/shrtr/backend/domain"
 )
 
 type urlMemoryRepository struct {

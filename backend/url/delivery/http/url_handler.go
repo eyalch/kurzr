@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 
-	"shrtr/domain"
+	"github.com/eyalch/shrtr/backend/domain"
 )
 
 type urlHandler struct {

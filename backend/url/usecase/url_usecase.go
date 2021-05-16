@@ -3,7 +3,7 @@ package usecase
 import (
 	"github.com/pkg/errors"
 
-	"shrtr/domain"
+	"github.com/eyalch/shrtr/backend/domain"
 )
 
 type urlUsecase struct {

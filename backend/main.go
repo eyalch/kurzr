@@ -6,11 +6,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	urlHandler "shrtr/url/delivery/http"
-	urlKeyGenerator "shrtr/url/keygen"
-	urlMemoryRepo "shrtr/url/repository/memory"
-	urlUsecase "shrtr/url/usecase"
-	"shrtr/validator"
+	urlHandler "github.com/eyalch/shrtr/backend/url/delivery/http"
+	urlKeyGenerator "github.com/eyalch/shrtr/backend/url/keygen"
+	urlMemoryRepo "github.com/eyalch/shrtr/backend/url/repository/memory"
+	urlUsecase "github.com/eyalch/shrtr/backend/url/usecase"
+	"github.com/eyalch/shrtr/backend/validator"
 )
 
 func main() {

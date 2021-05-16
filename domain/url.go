@@ -10,7 +10,6 @@ type URLUsecase interface {
 type URLRepository interface {
 	Get(key string) (string, error)
 	Create(key string, url string) error
-	Exists(key string) bool
 }
 
 type URLKeyGenerator interface {
@@ -18,5 +17,6 @@ type URLKeyGenerator interface {
 }
 
 var (
-	ErrKeyNotExists = errors.New("key does not exist")
+	ErrKeyNotExists     = errors.New("key does not exist")
+	ErrKeyAlreadyExists = errors.New("key already exists")
 )

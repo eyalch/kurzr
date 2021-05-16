@@ -1,6 +1,10 @@
 package usecase
 
-import "shrtr/domain"
+import (
+	"github.com/pkg/errors"
+
+	"shrtr/domain"
+)
 
 type urlUsecase struct {
 	repo         domain.URLRepository
@@ -19,12 +23,20 @@ func (uc *urlUsecase) GetURL(key string) (string, error) {
 }
 
 func (uc *urlUsecase) ShortenURL(url string) (string, error) {
-	key := ""
-	for key == "" || uc.repo.Exists(key) {
-		key = uc.keyGenerator.GenerateKey()
-	}
-
+	key := uc.keyGenerator.GenerateKey()
 	err := uc.repo.Create(key, url)
+
+	// Keep retrying if the generated key already exists
+	// (unless another error occurred)
+	for err != nil {
+		switch errors.Cause(err) {
+		case domain.ErrKeyAlreadyExists:
+			key = uc.keyGenerator.GenerateKey()
+			err = uc.repo.Create(key, url)
+		default:
+			return "", err
+		}
+	}
 
 	return key, err
 }

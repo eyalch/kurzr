@@ -2,8 +2,9 @@ package keygen
 
 import (
 	"math/rand"
-	"shrtr/domain"
 	"time"
+
+	"shrtr/domain"
 )
 
 const (

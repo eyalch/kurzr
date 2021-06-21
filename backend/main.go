@@ -21,7 +21,7 @@ func main() {
 
 	e := echo.New()
 
-	e.Validator = validator.CustomValidator
+	e.Validator = validator.NewCustomValidator()
 
 	urlHandler.NewURLHandler(
 		e.Group(""),

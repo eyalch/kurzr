@@ -27,15 +27,13 @@ func (uc *urlUsecase) ShortenURL(url string) (string, error) {
 	err := uc.repo.Create(key, url)
 
 	// Keep retrying if the generated key already exists
-	// (unless another error occurred)
-	for err != nil {
-		switch errors.Cause(err) {
-		case domain.ErrKeyAlreadyExists:
-			key = uc.keyGenerator.GenerateKey()
-			err = uc.repo.Create(key, url)
-		default:
-			return "", err
-		}
+	for errors.Cause(err) == domain.ErrKeyAlreadyExists {
+		key = uc.keyGenerator.GenerateKey()
+		err = uc.repo.Create(key, url)
+	}
+
+	if err != nil {
+		return "", err
 	}
 
 	return key, err

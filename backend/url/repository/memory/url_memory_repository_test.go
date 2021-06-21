@@ -21,7 +21,7 @@ func TestGet(t *testing.T) {
 	url, err := r.Get("abc123")
 
 	if err != nil {
-		t.Fatal("could not get URL: ", err)
+		t.Fatal("could not get URL:", err)
 	} else if url != "http://example.com" {
 		t.Fatalf("got wrong URL: %s, expected: %s", url, "http://example.com")
 	}

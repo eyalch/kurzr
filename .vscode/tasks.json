@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "backend",
+      "detail": "Runs the back-end API server",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": false,
+          "build": true
+        },
+        "files": ["${workspaceFolder}/backend/docker-compose.yml"]
+      }
+    }
+  ]
+}

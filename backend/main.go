@@ -1,8 +1,8 @@
 package main
 
 import (
-	"log"
-	"net/url"
+	"fmt"
+	"os"
 
 	"github.com/labstack/echo/v4"
 
@@ -14,11 +14,6 @@ import (
 )
 
 func main() {
-	host, err := url.Parse("http://localhost:3000/")
-	if err != nil {
-		log.Fatal("could not parse host url: ", err)
-	}
-
 	e := echo.New()
 
 	e.Validator = validator.NewCustomValidator()
@@ -29,8 +24,12 @@ func main() {
 			urlMemoryRepo.NewURLMemoryRepository(),
 			urlKeyGenerator.NewURLKeyGenerator(),
 		),
-		host,
 	)
 
-	e.Logger.Fatal(e.Start(":3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+	addr := fmt.Sprintf(":%s", port)
+	e.Logger.Fatal(e.Start(addr))
 }

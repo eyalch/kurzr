@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 
 	"github.com/labstack/echo/v4"
@@ -18,12 +20,23 @@ func main() {
 
 	e.Validator = validator.NewCustomValidator()
 
+	origin := os.Getenv("ORIGIN")
+	if origin == "" {
+		log.Fatal("ORIGIN environment variable is required")
+	}
+
+	originUrl, err := url.Parse(origin)
+	if err != nil {
+		log.Fatal("could not parse origin")
+	}
+
 	urlHandler.NewURLHandler(
 		e.Group(""),
 		urlUsecase.NewURLUsecase(
 			urlMemoryRepo.NewURLMemoryRepository(),
 			urlKeyGenerator.NewURLKeyGenerator(),
 		),
+		originUrl,
 	)
 
 	port := os.Getenv("PORT")

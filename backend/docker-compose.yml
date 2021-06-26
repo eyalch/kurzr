@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    environment:
+      PORT: 4000
+      ORIGIN: http://localhost:4000
+    ports:
+      - 4000:4000

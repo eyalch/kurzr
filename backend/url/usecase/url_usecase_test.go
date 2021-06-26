@@ -4,35 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/eyalch/shrtr/backend/domain"
 	"github.com/eyalch/shrtr/backend/url/repository/memory"
 	"github.com/eyalch/shrtr/backend/url/usecase"
 )
 
-func TestGetURL(t *testing.T) {
-	repo := memory.NewURLMemoryRepository()
-	uc := usecase.NewURLUsecase(repo, nil)
+type URLUsecaseTestSuite struct {
+	suite.Suite
 
-	_, err := uc.GetURL("abc123")
-
-	if errors.Cause(err) != domain.ErrKeyNotExists {
-		t.Fatal("wrong error was returned for a non-existing key:", err)
-	}
-
-	err = repo.Create("abc123", "http://example.com")
-	if err != nil {
-		t.Fatal("could not create URL:", err)
-	}
-
-	url, err := uc.GetURL("abc123")
-
-	if err != nil {
-		t.Fatal("could not get URL:", err)
-	} else if url != "http://example.com" {
-		t.Fatalf("got wrong URL: %s, expected: %s", url, "http://example.com")
-	}
+	repo domain.URLRepository
+	uc   domain.URLUsecase
 }
 
 type testKeyGenerator struct {
@@ -49,23 +32,42 @@ func (kg *testKeyGenerator) GenerateKey() string {
 	return fmt.Sprintf("abc-%d", suffix)
 }
 
-func TestShortenURL(t *testing.T) {
-	repo := memory.NewURLMemoryRepository()
-	uc := usecase.NewURLUsecase(repo, &testKeyGenerator{0})
+func (s *URLUsecaseTestSuite) SetupTest() {
+	s.repo = memory.NewURLMemoryRepository()
+	s.uc = usecase.NewURLUsecase(s.repo, &testKeyGenerator{0})
+}
 
-	key, err := uc.ShortenURL("http://example.com")
+func (s *URLUsecaseTestSuite) TestGetURL() {
+	err := s.repo.Create("abc123", "http://example.com")
+	s.Require().NoError(err)
 
-	if err != nil {
-		t.Fatal("could not shorten URL:", err)
-	} else if key != "abc-0" {
-		t.Fatalf("got wrong key: %s, expected: %s", key, "abc-0")
+	url, err := s.uc.GetURL("abc123")
+
+	if s.NoError(err) {
+		s.Equal("http://example.com", url)
+	}
+}
+
+func (s *URLUsecaseTestSuite) TestGetURLNotFound() {
+	_, err := s.uc.GetURL("abc123")
+
+	s.ErrorIs(err, domain.ErrKeyNotFound)
+}
+
+func (s *URLUsecaseTestSuite) TestShortenURL() {
+	key, err := s.uc.ShortenURL("http://example.com")
+
+	if s.NoError(err) {
+		s.Equal("abc-0", key)
 	}
 
-	key, err = uc.ShortenURL("http://example.com")
+	key, err = s.uc.ShortenURL("http://example.com")
 
-	if err != nil {
-		t.Fatal("could not shorten URL:", err)
-	} else if key != "abc-2" {
-		t.Fatalf("got wrong key: %s, expected: %s", key, "abc-2")
+	if s.NoError(err) {
+		s.Equal("abc-2", key)
 	}
+}
+
+func TestURLUsecase(t *testing.T) {
+	suite.Run(t, new(URLUsecaseTestSuite))
 }

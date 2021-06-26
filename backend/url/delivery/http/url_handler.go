@@ -35,7 +35,7 @@ func (h *urlHandler) Redirect(c echo.Context) error {
 	url, err := h.uc.GetURL(key)
 	if err != nil {
 		switch errors.Cause(err) {
-		case domain.ErrKeyNotExists:
+		case domain.ErrKeyNotFound:
 			return c.NoContent(http.StatusNotFound)
 		default:
 			return err

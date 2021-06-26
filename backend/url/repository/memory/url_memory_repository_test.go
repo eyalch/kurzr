@@ -3,51 +3,48 @@ package memory_test
 import (
 	"testing"
 
-	"github.com/pkg/errors"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/eyalch/shrtr/backend/domain"
 	"github.com/eyalch/shrtr/backend/url/repository/memory"
 )
 
-func TestGet(t *testing.T) {
-	r := memory.NewURLMemoryRepository()
+type URLMemoryRepositoryTestSuite struct {
+	suite.Suite
 
-	// Create the URL
-	err := r.Create("abc123", "http://example.com")
-	if err != nil {
-		t.Fatal("could not create URL:", err)
-	}
+	repo domain.URLRepository
+}
 
-	url, err := r.Get("abc123")
+func (s *URLMemoryRepositoryTestSuite) SetupTest() {
+	s.repo = memory.NewURLMemoryRepository()
+}
 
-	if err != nil {
-		t.Fatal("could not get URL:", err)
-	} else if url != "http://example.com" {
-		t.Fatalf("got wrong URL: %s, expected: %s", url, "http://example.com")
+func (s *URLMemoryRepositoryTestSuite) TestCreateAndGet() {
+	err := s.repo.Create("abc123", "http://example.com")
+	s.Require().NoError(err)
+
+	url, err := s.repo.Get("abc123")
+
+	if s.NoError(err) {
+		s.Equal("http://example.com", url)
 	}
 }
 
-func TestGet_NotFound(t *testing.T) {
-	r := memory.NewURLMemoryRepository()
+func (s *URLMemoryRepositoryTestSuite) TestGetNotFound() {
+	_, err := s.repo.Get("abc123")
 
-	_, err := r.Get("abc123")
-
-	if errors.Cause(err) != domain.ErrKeyNotExists {
-		t.Fatal("wrong error was returned for a non-existing key:", err)
-	}
+	s.ErrorIs(err, domain.ErrKeyNotFound)
 }
 
-func TestCreate_Duplicate(t *testing.T) {
-	r := memory.NewURLMemoryRepository()
+func (s *URLMemoryRepositoryTestSuite) TestCreateDuplicate() {
+	err := s.repo.Create("abc123", "http://example.com")
+	s.Require().NoError(err)
 
-	err := r.Create("abc123", "http://example.com")
-	if err != nil {
-		t.Fatal("could not create URL:", err)
-	}
+	err = s.repo.Create("abc123", "http://another-example.com")
 
-	err = r.Create("abc123", "http://another-example.com")
+	s.ErrorIs(err, domain.ErrDuplicateKey)
+}
 
-	if errors.Cause(err) != domain.ErrKeyAlreadyExists {
-		t.Fatal("wrong error was returned for a duplicate key:", err)
-	}
+func TestURLMemoryRepository(t *testing.T) {
+	suite.Run(t, new(URLMemoryRepositoryTestSuite))
 }

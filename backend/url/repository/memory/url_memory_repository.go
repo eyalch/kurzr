@@ -16,7 +16,7 @@ func NewURLMemoryRepository() domain.URLRepository {
 func (r *urlMemoryRepository) Get(key string) (string, error) {
 	url, exists := r.urls[key]
 	if !exists {
-		return "", domain.ErrKeyNotExists
+		return "", domain.ErrKeyNotFound
 	}
 	return url, nil
 }
@@ -24,7 +24,7 @@ func (r *urlMemoryRepository) Get(key string) (string, error) {
 func (r *urlMemoryRepository) Create(key string, url string) error {
 	_, exists := r.urls[key]
 	if exists {
-		return domain.ErrKeyAlreadyExists
+		return domain.ErrDuplicateKey
 	}
 
 	r.urls[key] = url

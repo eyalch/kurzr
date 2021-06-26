@@ -27,7 +27,7 @@ func (uc *urlUsecase) ShortenURL(url string) (string, error) {
 	err := uc.repo.Create(key, url)
 
 	// Keep retrying if the generated key already exists
-	for errors.Cause(err) == domain.ErrKeyAlreadyExists {
+	for errors.Cause(err) == domain.ErrDuplicateKey {
 		key = uc.keyGenerator.GenerateKey()
 		err = uc.repo.Create(key, url)
 	}

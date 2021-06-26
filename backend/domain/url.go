@@ -17,6 +17,6 @@ type URLKeyGenerator interface {
 }
 
 var (
-	ErrKeyNotExists     = errors.New("key does not exist")
-	ErrKeyAlreadyExists = errors.New("key already exists")
+	ErrKeyNotFound  = errors.New("key does not exist")
+	ErrDuplicateKey = errors.New("key already exists")
 )

@@ -12,18 +12,19 @@ import (
 )
 
 type urlHandler struct {
-	uc   domain.URLUsecase
-	host *url.URL
+	uc domain.URLUsecase
 }
 
-func NewURLHandler(g *echo.Group, uc domain.URLUsecase, host *url.URL) {
-	h := urlHandler{uc, host}
+func NewURLHandler(g *echo.Group, uc domain.URLUsecase) urlHandler {
+	h := urlHandler{uc}
 
-	g.GET("/:key", h.redirect)
-	g.POST("/", h.create)
+	g.GET("/:key", h.Redirect)
+	g.POST("/", h.Create)
+
+	return h
 }
 
-func (h *urlHandler) redirect(c echo.Context) error {
+func (h *urlHandler) Redirect(c echo.Context) error {
 	key := c.Param("key")
 
 	url, err := h.uc.GetURL(key)
@@ -39,26 +40,39 @@ func (h *urlHandler) redirect(c echo.Context) error {
 	return c.Redirect(http.StatusMovedPermanently, url)
 }
 
-func (h *urlHandler) create(c echo.Context) error {
-	url := struct {
-		URL string `json:"url" validate:"required,url"`
-	}{}
+func getOriginURL(r *http.Request) (*url.URL, error) {
+	origin := r.Header.Get(echo.HeaderOrigin)
+	if origin == "" {
+		origin = "http://" + r.Host
+	}
+	return url.Parse(origin)
+}
 
-	err := c.Bind(&url)
+type payload struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
+func (h *urlHandler) Create(c echo.Context) error {
+	req := new(payload)
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	if err := c.Validate(req); err != nil {
+		return err
+	}
+
+	originUrl, err := getOriginURL(c.Request())
 	if err != nil {
 		return err
 	}
 
-	key, err := h.uc.ShortenURL(url.URL)
+	key, err := h.uc.ShortenURL(req.URL)
 	if err != nil {
 		return err
 	}
 
-	hostUrl := *h.host
-	hostUrl.Path = path.Join(hostUrl.Path, key)
-	shortUrl := hostUrl.String()
+	originUrl.Path = path.Join(originUrl.Path, key)
+	shortUrl := originUrl.String()
 
-	return c.JSON(http.StatusCreated, struct {
-		URL string `json:"url"`
-	}{shortUrl})
+	return c.JSON(http.StatusCreated, payload{shortUrl})
 }

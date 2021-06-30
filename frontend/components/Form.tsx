@@ -7,11 +7,19 @@ type FormProps = {
   setShortUrl: (shortUrl: string) => void
 }
 
-const isValidHttpUrl = (string: string) =>
-  /[-\w@:%.+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-\w()@:%+.~#?&/=]*)/.test(string)
+const isValidUrl = (string: string) => {
+  try {
+    new URL(string)
+    return true
+  } catch {
+    return false
+  }
+}
 
 const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
   const [loading, setLoading] = useState(false)
+
+  const urlWithSchema = url.includes("://") ? url : `https://${url}`
 
   const shortenUrl = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -24,7 +32,7 @@ const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: urlWithSchema }),
       })
       const data = await response.json()
 
@@ -49,7 +57,7 @@ const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
 
       <div className="flex mt-3">
         <button
-          disabled={!isValidHttpUrl(url)}
+          disabled={!isValidUrl(urlWithSchema)}
           className="bg-primary text-white rounded font-semibold flex justify-center relative items-center w-full py-3 disabled:opacity-50 focus:bg-primary-dark transition-colors"
         >
           {loading && (

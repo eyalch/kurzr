@@ -1,5 +1,4 @@
 module.exports = {
-  mode: "jit",
   purge: ["./pages/**/*.{js,ts,jsx,tsx}"],
   darkMode: false, // or 'media' or 'class'
   theme: {
@@ -7,7 +6,8 @@ module.exports = {
       colors: {
         primary: {
           light: "#89C2D9",
-          DEFAULT: "#2A6F97",
+          DEFAULT: "#3181AF",
+          dark: "#1F526F",
         },
       },
     },

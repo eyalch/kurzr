@@ -20,28 +20,35 @@ func (s *URLMemoryRepositoryTestSuite) SetupTest() {
 }
 
 func (s *URLMemoryRepositoryTestSuite) TestCreateAndGet() {
+	// Act
 	err := s.repo.Create("abc123", "http://example.com")
 	s.Require().NoError(err)
 
 	url, err := s.repo.Get("abc123")
 
+	// Assert
 	if s.NoError(err) {
 		s.Equal("http://example.com", url)
 	}
 }
 
-func (s *URLMemoryRepositoryTestSuite) TestGetNotFound() {
+func (s *URLMemoryRepositoryTestSuite) TestGet_NotFound() {
+	// Act
 	_, err := s.repo.Get("abc123")
 
+	// Assert
 	s.ErrorIs(err, domain.ErrKeyNotFound)
 }
 
-func (s *URLMemoryRepositoryTestSuite) TestCreateDuplicate() {
+func (s *URLMemoryRepositoryTestSuite) TestCreate_Duplicate() {
+	// Arrange
 	err := s.repo.Create("abc123", "http://example.com")
 	s.Require().NoError(err)
 
+	// Act
 	err = s.repo.Create("abc123", "http://another-example.com")
 
+	// Assert
 	s.ErrorIs(err, domain.ErrDuplicateKey)
 }
 

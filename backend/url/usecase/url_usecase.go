@@ -18,7 +18,7 @@ func NewURLUsecase(
 	return &urlUsecase{repo, keyGenerator}
 }
 
-func (uc *urlUsecase) GetURL(key string) (string, error) {
+func (uc *urlUsecase) GetLongURL(key string) (string, error) {
 	return uc.repo.Get(key)
 }
 

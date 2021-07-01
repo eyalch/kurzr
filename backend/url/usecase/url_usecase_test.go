@@ -38,33 +38,38 @@ func (s *URLUsecaseTestSuite) SetupTest() {
 }
 
 func (s *URLUsecaseTestSuite) TestGetURL() {
+	// Arrange
 	err := s.repo.Create("abc123", "http://example.com")
 	s.Require().NoError(err)
 
-	url, err := s.uc.GetURL("abc123")
+	// Act
+	longUrl, err := s.uc.GetLongURL("abc123")
 
+	// Assert
 	if s.NoError(err) {
-		s.Equal("http://example.com", url)
+		s.Equal("http://example.com", longUrl)
 	}
 }
 
-func (s *URLUsecaseTestSuite) TestGetURLNotFound() {
-	_, err := s.uc.GetURL("abc123")
+func (s *URLUsecaseTestSuite) TestGetLongURL_NotFound() {
+	// Act
+	_, err := s.uc.GetLongURL("abc123")
 
+	// Assert
 	s.ErrorIs(err, domain.ErrKeyNotFound)
 }
 
 func (s *URLUsecaseTestSuite) TestShortenURL() {
-	key, err := s.uc.ShortenURL("http://example.com")
+	// Act
+	key1, err1 := s.uc.ShortenURL("http://example.com")
+	key2, err2 := s.uc.ShortenURL("http://example.com")
 
-	if s.NoError(err) {
-		s.Equal("abc-0", key)
+	// Assert
+	if s.NoError(err1) {
+		s.Equal("abc-0", key1)
 	}
-
-	key, err = s.uc.ShortenURL("http://example.com")
-
-	if s.NoError(err) {
-		s.Equal("abc-2", key)
+	if s.NoError(err2) {
+		s.Equal("abc-2", key2)
 	}
 }
 

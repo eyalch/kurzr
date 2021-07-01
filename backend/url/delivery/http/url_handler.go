@@ -5,67 +5,80 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/labstack/echo/v4"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
+	"github.com/go-playground/validator"
 	"github.com/pkg/errors"
 
 	"github.com/eyalch/shrtr/backend/domain"
+	"github.com/eyalch/shrtr/backend/util"
 )
 
+var validate = validator.New()
+
 type urlHandler struct {
-	uc   domain.URLUsecase
-	host *url.URL
+	uc        domain.URLUsecase
+	originUrl *url.URL
 }
 
-func NewURLHandler(
-	g *echo.Group,
-	uc domain.URLUsecase,
-	host *url.URL,
-) urlHandler {
-	h := urlHandler{uc, host}
+func NewURLHandler(uc domain.URLUsecase, originUrl *url.URL) http.Handler {
+	h := urlHandler{uc, originUrl}
 
-	g.GET("/:key", h.Redirect)
-	g.POST("/", h.Create)
-
-	return h
+	r := chi.NewRouter()
+	r.Get("/{key}", h.redirect)
+	r.Post("/", h.create)
+	return r
 }
 
-func (h *urlHandler) Redirect(c echo.Context) error {
-	key := c.Param("key")
+func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
+	key := chi.URLParam(r, "key")
 
-	url, err := h.uc.GetURL(key)
+	longUrl, err := h.uc.GetLongURL(key)
 	if err != nil {
 		switch errors.Cause(err) {
 		case domain.ErrKeyNotFound:
-			return c.NoContent(http.StatusNotFound)
+			render.Render(w, r,
+				util.HTTPError(
+					http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
+				),
+			)
 		default:
-			return err
+			render.Render(w, r, util.InternalServerError())
 		}
+		return
 	}
 
-	return c.Redirect(http.StatusMovedPermanently, url)
+	http.Redirect(w, r, longUrl, http.StatusMovedPermanently)
 }
 
-type payload struct {
+type createRequestPayload struct {
 	URL string `json:"url" validate:"required,url"`
 }
 
-func (h *urlHandler) Create(c echo.Context) error {
-	req := new(payload)
-	if err := c.Bind(req); err != nil {
-		return err
-	}
-	if err := c.Validate(req); err != nil {
-		return err
+func (p *createRequestPayload) Bind(r *http.Request) error {
+	return validate.Struct(p)
+}
+
+type createResponsePayload struct {
+	ShortURL string `json:"short_url"`
+}
+
+func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
+	data := new(createRequestPayload)
+	if err := util.BindAndValidate(w, r, data); err != nil {
+		return
 	}
 
-	key, err := h.uc.ShortenURL(req.URL)
+	key, err := h.uc.ShortenURL(data.URL)
 	if err != nil {
-		return err
+		render.Render(w, r, util.InternalServerError())
+		return
 	}
 
-	hostUrl := *h.host
-	hostUrl.Path = path.Join(hostUrl.Path, key)
-	shortUrl := hostUrl.String()
+	originUrl := *h.originUrl
+	originUrl.Path = path.Join(originUrl.Path, key)
+	shortUrl := originUrl.String()
 
-	return c.JSON(http.StatusCreated, payload{shortUrl})
+	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, createResponsePayload{shortUrl})
 }

@@ -3,7 +3,7 @@ package domain
 import "github.com/pkg/errors"
 
 type URLUsecase interface {
-	GetURL(key string) (string, error)
+	GetLongURL(key string) (string, error)
 	ShortenURL(url string) (string, error)
 }
 
@@ -17,6 +17,9 @@ type URLKeyGenerator interface {
 }
 
 var (
-	ErrKeyNotFound  = errors.New("key does not exist")
-	ErrDuplicateKey = errors.New("key already exists")
+	ErrKeyNotFound     = errors.New("key does not exist")
+	ErrKeyNotFoundCode = "ERR_KEY_NOT_FOUND"
+
+	ErrDuplicateKey     = errors.New("key already exists")
+	ErrDuplicateKeyCode = "ERR_DUPLICATE_KEY"
 )

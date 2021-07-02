@@ -74,11 +74,9 @@ func (s *urlHandlerTestSuite) TestRedirect_NotFound() {
 
 func (s *urlHandlerTestSuite) TestCreate() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL,
-		"application/json",
-		strings.NewReader(`{ "url": "http://example.com" }`),
-	)
+	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
+		{ "url": "http://example.com" }
+	`))
 	s.Require().NoError(err)
 
 	// Assert
@@ -111,11 +109,61 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_EmptyURL() {
 
 func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL,
-		"application/json",
-		strings.NewReader(`{ "url": "example.com" }`),
-	)
+	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
+		{ "url": "example.com" }
+	`))
+	s.Require().NoError(err)
+
+	// Assert
+	s.Equal(http.StatusBadRequest, resp.StatusCode)
+}
+
+func (s *urlHandlerTestSuite) TestCreate_Alias() {
+	// Act
+	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
+		{ "url": "http://example.com", "alias": "abc123" }
+	`))
+	s.Require().NoError(err)
+
+	// Assert
+	if s.Equal(http.StatusCreated, resp.StatusCode) {
+		// Read response body
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		// Convert JSON to struct
+		data := new(struct {
+			ShortURL string `json:"short_url"`
+		})
+		err = json.Unmarshal(body, data)
+		s.Require().NoError(err)
+
+		// Ensure the short URL has the expected form
+		s.Equal("http://example.com/abc123", data.ShortURL)
+	}
+}
+
+func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
+	// Arrange
+	err := s.uc.ShortenURLWithAlias("http://example.com", "abc123")
+	s.Require().NoError(err)
+
+	// Act
+	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
+		{ "url": "http://example.com", "alias": "abc123" }
+	`))
+	s.Require().NoError(err)
+
+	// Assert
+	s.Equal(http.StatusConflict, resp.StatusCode)
+}
+
+func (s *urlHandlerTestSuite) TestCreate_Alias_Invalid() {
+	// Act
+	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
+		{ "url": "http://example.com", "alias": "invalid_$lia4!" }
+	`))
 	s.Require().NoError(err)
 
 	// Assert

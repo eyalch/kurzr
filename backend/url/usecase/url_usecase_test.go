@@ -73,6 +73,31 @@ func (s *URLUsecaseTestSuite) TestShortenURL() {
 	}
 }
 
+func (s *URLUsecaseTestSuite) TestShortenURLWithAlias() {
+	// Act
+	err := s.uc.ShortenURLWithAlias("http://example.com", "abc123")
+
+	// Assert
+	if s.NoError(err) {
+		longUrl, err := s.repo.Get("abc123")
+		s.Require().NoError(err)
+
+		s.Equal("http://example.com", longUrl)
+	}
+}
+
+func (s *URLUsecaseTestSuite) TestShortenURLWithAlias_Duplicate() {
+	// Arrange
+	err := s.uc.ShortenURLWithAlias("http://example.com", "abc123")
+	s.Require().NoError(err)
+
+	// Act
+	err = s.uc.ShortenURLWithAlias("http://another-example.com", "abc123")
+
+	// Assert
+	s.ErrorIs(err, domain.ErrDuplicateKey)
+}
+
 func TestURLUsecase(t *testing.T) {
 	suite.Run(t, new(URLUsecaseTestSuite))
 }

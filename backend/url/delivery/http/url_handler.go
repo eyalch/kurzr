@@ -37,11 +37,9 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch errors.Cause(err) {
 		case domain.ErrKeyNotFound:
-			render.Render(w, r,
-				util.HTTPError(
-					http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
-				),
-			)
+			render.Render(w, r, util.HTTPError(
+				http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
+			))
 		default:
 			render.Render(w, r, util.InternalServerError())
 		}
@@ -52,7 +50,8 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 }
 
 type createRequestPayload struct {
-	URL string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,url"`
+	Alias string `json:"alias" validate:"omitempty,alphanum"`
 }
 
 func (p *createRequestPayload) Bind(r *http.Request) error {
@@ -69,10 +68,31 @@ func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key, err := h.uc.ShortenURL(data.URL)
-	if err != nil {
-		render.Render(w, r, util.InternalServerError())
-		return
+	var key string
+
+	if data.Alias != "" {
+		key = data.Alias
+		err := h.uc.ShortenURLWithAlias(data.URL, data.Alias)
+
+		if err != nil {
+			switch errors.Cause(err) {
+			case domain.ErrDuplicateKey:
+				render.Render(w, r, util.HTTPError(
+					http.StatusConflict, domain.ErrDuplicateKeyCode, err.Error(),
+				))
+			default:
+				render.Render(w, r, util.InternalServerError())
+			}
+			return
+		}
+	} else {
+		var err error
+		key, err = h.uc.ShortenURL(data.URL)
+
+		if err != nil {
+			render.Render(w, r, util.InternalServerError())
+			return
+		}
 	}
 
 	originUrl := *h.originUrl

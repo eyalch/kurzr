@@ -5,6 +5,7 @@ import "github.com/pkg/errors"
 type URLUsecase interface {
 	GetLongURL(key string) (string, error)
 	ShortenURL(url string) (string, error)
+	ShortenURLWithAlias(url string, alias string) error
 }
 
 type URLRepository interface {

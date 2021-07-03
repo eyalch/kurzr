@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,11 +12,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/go-redis/redis/v8"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/pkg/errors"
 
+	"github.com/eyalch/shrtr/backend/domain"
 	urlHandler "github.com/eyalch/shrtr/backend/url/delivery/http"
 	urlKeyGenerator "github.com/eyalch/shrtr/backend/url/keygen"
 	urlMemoryRepo "github.com/eyalch/shrtr/backend/url/repository/memory"
+	urlRedisRepo "github.com/eyalch/shrtr/backend/url/repository/redis"
 	urlUsecase "github.com/eyalch/shrtr/backend/url/usecase"
 )
 
@@ -31,8 +36,46 @@ func getOriginURL() (*url.URL, error) {
 	if origin == "" {
 		return nil, errors.New("ORIGIN environment variable is required")
 	}
-
 	return url.Parse(origin)
+}
+
+func initRedis() (*redis.Client, error) {
+	redisUrl := os.Getenv("REDIS_URL")
+
+	if redisUrl == "" {
+		return nil, nil
+	}
+
+	redisOptions, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse the given Redis URL")
+	}
+
+	rdb := redis.NewClient(redisOptions)
+
+	err = rdb.Ping(context.Background()).Err()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not ping Redis")
+	}
+
+	return rdb, nil
+}
+
+func getUrlHandler(originUrl *url.URL, rdb *redis.Client) http.Handler {
+	var repo domain.URLRepository
+	if rdb != nil {
+		repo = urlRedisRepo.NewURLRedisRepository(rdb)
+	} else {
+		repo = urlMemoryRepo.NewURLMemoryRepository()
+	}
+
+	return urlHandler.NewURLHandler(
+		urlUsecase.NewURLUsecase(
+			repo,
+			urlKeyGenerator.NewURLKeyGenerator(),
+		),
+		originUrl,
+	)
 }
 
 func main() {
@@ -49,14 +92,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	urlHandler := urlHandler.NewURLHandler(
-		urlUsecase.NewURLUsecase(
-			urlMemoryRepo.NewURLMemoryRepository(),
-			urlKeyGenerator.NewURLKeyGenerator(),
-		),
-		originUrl,
-	)
-	r.Mount("/", urlHandler)
+	rdb, err := initRedis()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r.Mount("/", getUrlHandler(originUrl, rdb))
 
 	addr := getAddr()
 	log.Println("Listening at " + addr)

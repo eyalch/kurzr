@@ -7,8 +7,11 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/go-redis/redis/v8 v8.11.0 // indirect
+	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
+	go.opentelemetry.io/otel v0.13.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )

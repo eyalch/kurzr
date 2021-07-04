@@ -1,0 +1,7 @@
+.btn {
+  @apply bg-primary text-white disabled:opacity-50 rounded font-semibold flex justify-center relative items-center w-full py-3 focus:bg-primary-dark transition-colors;
+}
+
+.btnLoading {
+  @apply disabled:opacity-100;
+}

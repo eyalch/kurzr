@@ -1,5 +1,7 @@
-import { LinkIcon } from "@heroicons/react/solid"
+import { faLink } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { FormEvent, useState } from "react"
+import Button from "./Button"
 
 type FormProps = {
   url: string
@@ -45,7 +47,11 @@ const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
   return (
     <form onSubmit={shortenUrl}>
       <div className="relative">
-        <LinkIcon className="h-5 w-5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <FontAwesomeIcon
+          icon={faLink}
+          className="h-5 w-5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+        />
+
         <input
           type="text"
           className="border-gray-300 border rounded w-full min-h-30 py-2 pr-2.5 pl-9 focus:ring-2 focus:ring-primary-light focus:outline-none focus:border-primary-light transition-shadow"
@@ -56,36 +62,11 @@ const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
       </div>
 
       <div className="flex mt-3">
-        <button
+        <Button
+          label="Shorten URL"
           disabled={!isValidUrl(urlWithSchema)}
-          className="bg-primary text-white rounded font-semibold flex justify-center relative items-center w-full py-3 disabled:opacity-50 focus:bg-primary-dark transition-colors"
-        >
-          {loading && (
-            <svg
-              className="absolute inset-x-0 w-full animate-spin h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          )}
-
-          <div className={`flex items-center ${loading ? "opacity-0" : ""}`}>
-            Shorten URL
-          </div>
-        </button>
+          loading={loading}
+        ></Button>
       </div>
     </form>
   )

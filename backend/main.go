@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/akrylysov/algnhsa"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -99,7 +100,11 @@ func main() {
 
 	r.Mount("/", getUrlHandler(originUrl, rdb))
 
-	addr := getAddr()
-	log.Println("Listening at " + addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		algnhsa.ListenAndServe(r, nil)
+	} else {
+		addr := getAddr()
+		log.Println("Listening at " + addr)
+		log.Fatal(http.ListenAndServe(addr, r))
+	}
 }

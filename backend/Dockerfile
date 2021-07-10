@@ -1,14 +1,14 @@
-FROM golang:1.16.5-alpine3.14 AS builder
+FROM golang:1.16.5-buster AS builder
 
 RUN apk add --no-cache git
 
 WORKDIR /usr/src/app
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN make download
 
 COPY . .
-RUN go build
+RUN make build
 
 
 FROM alpine:3.14.0

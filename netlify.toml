@@ -1,0 +1,9 @@
+[build]
+  command = "make build"
+  publish = "site"
+
+[build.environment]
+  GO_IMPORT_PATH = "github.com/eyalch/shrtr"
+
+[functions]
+  directory = "functions/"

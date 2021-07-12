@@ -104,7 +104,7 @@ func main() {
 	if os.Getenv("AWS_LAMBDA_RUNTIME_API") == "" {
 		listenFunc = http.ListenAndServe
 	}
-	log.Print("AWS_LAMBDA_RUNTIME_API: ", os.Getenv("AWS_LAMBDA_RUNTIME_API"))
+	log.Print(os.Environ())
 
 	addr := getAddr()
 	log.Println("Listening at " + addr)

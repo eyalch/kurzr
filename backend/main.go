@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/akrylysov/algnhsa"
+	"github.com/apex/gateway/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -100,11 +100,13 @@ func main() {
 
 	r.Mount("/", getUrlHandler(originUrl, rdb))
 
-	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
-		algnhsa.ListenAndServe(r, nil)
-	} else {
-		addr := getAddr()
-		log.Println("Listening at " + addr)
-		log.Fatal(http.ListenAndServe(addr, r))
+	listenFunc := gateway.ListenAndServe
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") == "" {
+		listenFunc = http.ListenAndServe
 	}
+	log.Print("AWS_LAMBDA_RUNTIME_API: ", os.Getenv("AWS_LAMBDA_RUNTIME_API"))
+
+	addr := getAddr()
+	log.Println("Listening at " + addr)
+	log.Fatal(listenFunc(addr, r))
 }

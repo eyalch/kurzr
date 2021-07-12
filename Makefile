@@ -1,5 +1,5 @@
 build-netlify-function:
-	mkdir functions
+	mkdir -p functions
 	$(MAKE) -C backend download build OUTPUT="$(PWD)/functions/shrtr"
 
 build: build-netlify-function

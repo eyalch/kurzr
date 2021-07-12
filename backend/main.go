@@ -101,10 +101,9 @@ func main() {
 	r.Mount("/", getUrlHandler(originUrl, rdb))
 
 	listenFunc := gateway.ListenAndServe
-	if os.Getenv("AWS_LAMBDA_RUNTIME_API") == "" {
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
 		listenFunc = http.ListenAndServe
 	}
-	log.Print(os.Environ())
 
 	addr := getAddr()
 	log.Println("Listening at " + addr)

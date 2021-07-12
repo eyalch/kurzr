@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"time"
 
 	"github.com/apex/gateway/v2"
@@ -80,14 +81,6 @@ func getUrlHandler(originUrl *url.URL, rdb *redis.Client) http.Handler {
 }
 
 func main() {
-	r := chi.NewRouter()
-
-	r.Use(middleware.Logger)
-	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Recoverer)
-	r.Use(render.SetContentType(render.ContentTypeJSON))
-	r.Use(middleware.Timeout(time.Second * 15))
-
 	originUrl, err := getOriginURL()
 	if err != nil {
 		log.Fatal(err)
@@ -98,14 +91,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r.Mount("/", getUrlHandler(originUrl, rdb))
+	r := chi.NewRouter()
+
+	r.Use(middleware.Logger)
+	r.Use(middleware.StripSlashes)
+	r.Use(middleware.Recoverer)
+	r.Use(render.SetContentType(render.ContentTypeJSON))
+	r.Use(middleware.Timeout(time.Second * 15))
+
+	baseUrl := path.Join("/", os.Getenv("BASE_URL"))
+	r.Route(baseUrl, func(r chi.Router) {
+		r.Mount("/", getUrlHandler(originUrl, rdb))
+	})
+
+	addr := getAddr()
 
 	listenFunc := gateway.ListenAndServe
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
 		listenFunc = http.ListenAndServe
+		log.Println("Listening at " + addr)
 	}
 
-	addr := getAddr()
-	log.Println("Listening at " + addr)
 	log.Fatal(listenFunc(addr, r))
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apex/gateway/v2"
+	"github.com/apex/gateway"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"

@@ -3,7 +3,7 @@ module github.com/eyalch/shrtr/backend
 go 1.16
 
 require (
-	github.com/apex/gateway/v2 v2.0.0
+	github.com/apex/gateway v1.1.2
 	github.com/aws/aws-lambda-go v1.24.0 // indirect
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/go-chi/render v1.0.1

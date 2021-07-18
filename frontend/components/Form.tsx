@@ -14,6 +14,9 @@ interface IFormInput {
   alias: string
 }
 
+// TODO: Add share option (on mobile)
+// TODO: Add QR code
+// TODO: Add unit tests
 const isValidUrl = (string: string) => {
   try {
     new URL(string)

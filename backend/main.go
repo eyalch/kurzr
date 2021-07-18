@@ -111,6 +111,8 @@ func main() {
 		fmt.Printf("Logging err: %s\n", err.Error())
 	}
 
+	fmt.Println(os.Environ())
+
 	addr := getAddr()
 
 	listenFunc := gateway.ListenAndServe

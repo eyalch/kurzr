@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -100,10 +99,7 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(middleware.Timeout(time.Second * 15))
 
-	baseUrl := path.Join("/", os.Getenv("BASE_URL"))
-	r.Route(baseUrl, func(r chi.Router) {
-		r.Mount("/", getUrlHandler(originUrl, rdb))
-	})
+	r.Mount("/", getUrlHandler(originUrl, rdb))
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		route = strings.Replace(route, "/*/", "/", -1)

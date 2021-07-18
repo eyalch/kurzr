@@ -1,2 +1,1 @@
-/api/*  /.netlify/functions/shrtr/:splat  200
-/:key   /api/:key                         200
+/*  /.netlify/functions/shrtr/:splat  200

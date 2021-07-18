@@ -26,7 +26,7 @@ func NewURLHandler(uc domain.URLUsecase, originUrl *url.URL) http.Handler {
 
 	r := chi.NewRouter()
 	r.Get("/{key}", h.redirect)
-	r.Post("/", h.create)
+	r.Post("/api", h.create)
 	return r
 }
 

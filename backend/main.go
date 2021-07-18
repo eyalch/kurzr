@@ -34,9 +34,9 @@ func getAddr() string {
 }
 
 func getOriginURL() (*url.URL, error) {
-	origin := os.Getenv("ORIGIN")
+	origin := os.Getenv("URL")
 	if origin == "" {
-		return nil, errors.New("ORIGIN environment variable is required")
+		return nil, errors.New("URL environment variable is required")
 	}
 	return url.Parse(origin)
 }

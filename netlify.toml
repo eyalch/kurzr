@@ -4,3 +4,8 @@
 
 [build.environment]
   GO_IMPORT_PATH = "github.com/eyalch/shrtr"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/shrtr/:splat"
+  status = 200

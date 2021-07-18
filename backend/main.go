@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/apex/gateway"
@@ -100,18 +99,6 @@ func main() {
 	r.Use(middleware.Timeout(time.Second * 15))
 
 	r.Mount("/", getUrlHandler(originUrl, rdb))
-
-	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		route = strings.Replace(route, "/*/", "/", -1)
-		fmt.Printf("%s %s\n", method, route)
-		return nil
-	}
-
-	if err := chi.Walk(r, walkFunc); err != nil {
-		fmt.Printf("Logging err: %s\n", err.Error())
-	}
-
-	fmt.Println(os.Environ())
 
 	addr := getAddr()
 

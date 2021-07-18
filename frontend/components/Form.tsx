@@ -1,12 +1,17 @@
-import { faLink } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { FormEvent, useState } from "react"
+import { faLink, faTag } from "@fortawesome/free-solid-svg-icons"
+import axios from "axios"
+import React, { useState } from "react"
+import { SubmitHandler, useForm } from "react-hook-form"
 import Button from "./Button"
+import Input from "./Input"
 
 type FormProps = {
+  onSuccess: (url: string, shortUrl: string) => void
+}
+
+interface IFormInput {
   url: string
-  setUrl: (url: string) => void
-  setShortUrl: (shortUrl: string) => void
+  alias: string
 }
 
 const isValidUrl = (string: string) => {
@@ -18,56 +23,65 @@ const isValidUrl = (string: string) => {
   }
 }
 
-const Form = ({ url, setUrl, setShortUrl }: FormProps) => {
+const Form = ({ onSuccess }: FormProps) => {
   const [loading, setLoading] = useState(false)
+  // const [error, setError] = useState("")
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setError,
+    formState: { errors },
+  } = useForm<IFormInput>({ mode: "all" })
+
+  const url = watch("url", "")
   const urlWithSchema = url.includes("://") ? url : `https://${url}`
 
-  const shortenUrl = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
+  const shortenUrl: SubmitHandler<IFormInput> = async ({ alias, url }) => {
     setLoading(true)
 
     try {
-      const response = await fetch("/api", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: urlWithSchema }),
-      })
-      const data = await response.json()
-
-      setShortUrl(data.url)
-    } catch {
+      const { data } = await axios.post("/api", { url: urlWithSchema, alias })
+      onSuccess(url, data.short_url)
+    } catch (error) {
       setLoading(false)
+      if (error.response.data.code === "ERR_DUPLICATE_KEY") {
+        setError("alias", {
+          type: "duplicate",
+          message: "Alias is not available",
+        })
+      }
     }
   }
 
   return (
-    <form onSubmit={shortenUrl}>
-      <div className="relative">
-        <FontAwesomeIcon
-          icon={faLink}
-          className="h-5 w-5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
-        />
+    <form onSubmit={handleSubmit(shortenUrl)} autoComplete="off">
+      <Input
+        icon={faLink}
+        placeholder="Enter a URL here"
+        {...register("url")}
+        className="mb-4"
+      />
 
-        <input
-          type="text"
-          className="border-gray-300 border rounded w-full min-h-30 py-2 pr-2.5 pl-9 focus:ring-2 focus:ring-primary-light focus:outline-none focus:border-primary-light transition-shadow"
-          placeholder="Enter a URL here"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-        />
-      </div>
+      <Input
+        icon={faTag}
+        placeholder="Alias (optional)"
+        {...register("alias", {
+          pattern: {
+            value: /^[A-Za-z0-9]+$/,
+            message: "Use only letters and numbers",
+          },
+        })}
+        error={errors.alias?.message}
+        className="mb-4"
+      />
 
-      <div className="flex mt-3">
-        <Button
-          label="Shorten URL"
-          disabled={!isValidUrl(urlWithSchema)}
-          loading={loading}
-        ></Button>
-      </div>
+      <Button
+        label="Shorten URL"
+        disabled={!isValidUrl(urlWithSchema)}
+        loading={loading}
+      />
     </form>
   )
 }

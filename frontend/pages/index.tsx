@@ -13,18 +13,23 @@ const IndexPage = () => {
     setUrl("")
   }
 
+  const onSuccess = (url: string, shortUrl: string) => {
+    setUrl(url)
+    setShortUrl(shortUrl)
+  }
+
   return (
     <div className="p-3">
-      <a onClick={resetUrl} href="/">
-        <h1 className="text-primary text-5xl text-center font-bold my-7">
+      <h1 className="text-primary text-5xl text-center font-bold my-7">
+        <a onClick={resetUrl} href="/">
           shrtr
-        </h1>
-      </a>
+        </a>
+      </h1>
 
       {shortUrl ? (
         <Result shortUrl={shortUrl} />
       ) : (
-        <Form url={url} setUrl={setUrl} setShortUrl={setShortUrl} />
+        <Form onSuccess={onSuccess} />
       )}
     </div>
   )

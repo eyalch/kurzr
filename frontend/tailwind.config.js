@@ -10,6 +10,9 @@ module.exports = {
           dark: "#1F526F",
         },
       },
+      scale: {
+        "-1": "-1",
+      },
     },
     borderRadius: {
       DEFAULT: "0.375rem",

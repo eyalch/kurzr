@@ -11,10 +11,12 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/react-fontawesome": "^0.1.14",
+    "axios": "^0.21.1",
     "classnames": "^2.3.1",
     "next": "latest",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.1",
+    "react-hook-form": "^7.10.1"
   },
   "devDependencies": {
     "@types/node": "^12.12.21",

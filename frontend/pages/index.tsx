@@ -22,7 +22,7 @@ const IndexPage = () => {
     <div className="p-3">
       <h1 className="text-primary text-5xl text-center font-bold my-7">
         <a onClick={resetUrl} href="/">
-          shrtr
+          kurzr
         </a>
       </h1>
 

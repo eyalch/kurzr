@@ -3,7 +3,7 @@ import Form from "../components/Form"
 import Result from "../components/Result"
 
 const IndexPage = () => {
-  const [url, setUrl] = useState("")
+  const [, setUrl] = useState("")
   const [shortUrl, setShortUrl] = useState<string>()
 
   const resetUrl = (event: PointerEvent<HTMLAnchorElement>) => {

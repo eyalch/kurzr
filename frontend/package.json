@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "next",
-    "build": "next build",
+    "build": "next build && next export",
     "start": "next start",
     "type-check": "tsc"
   },
@@ -26,7 +26,7 @@
     "postcss": "^8.2.15",
     "prettier": "2.3.0",
     "tailwindcss": "^2.1.2",
-    "typescript": "4.0"
+    "typescript": "^4.3.5"
   },
   "license": "MIT"
 }

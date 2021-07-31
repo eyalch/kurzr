@@ -1,6 +1,7 @@
 [build]
+  base = "frontend"
   command = "make build"
-  publish = "site"
+  publish = "out"
 
 [build.environment]
   GO_IMPORT_PATH = "github.com/eyalch/kurzr"

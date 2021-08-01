@@ -74,9 +74,11 @@ func (s *urlHandlerTestSuite) TestRedirect_NotFound() {
 
 func (s *urlHandlerTestSuite) TestCreate() {
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
-		{ "url": "http://example.com" }
-	`))
+	resp, err := http.Post(
+		s.server.URL+"/api",
+		"application/json",
+		strings.NewReader(`{ "url": "http://example.com" }`),
+	)
 	s.Require().NoError(err)
 
 	// Assert
@@ -100,7 +102,7 @@ func (s *urlHandlerTestSuite) TestCreate() {
 
 func (s *urlHandlerTestSuite) TestCreate_Invalid_EmptyURL() {
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", nil)
+	resp, err := http.Post(s.server.URL+"/api", "application/json", nil)
 	s.Require().NoError(err)
 
 	// Assert
@@ -109,9 +111,11 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_EmptyURL() {
 
 func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
-		{ "url": "example.com" }
-	`))
+	resp, err := http.Post(
+		s.server.URL+"/api",
+		"application/json",
+		strings.NewReader(`{ "url": "example.com" }`),
+	)
 	s.Require().NoError(err)
 
 	// Assert
@@ -120,9 +124,11 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias() {
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
-		{ "url": "http://example.com", "alias": "abc123" }
-	`))
+	resp, err := http.Post(
+		s.server.URL+"/api",
+		"application/json",
+		strings.NewReader(`{ "url": "http://example.com", "alias": "abc123" }`),
+	)
 	s.Require().NoError(err)
 
 	// Assert
@@ -150,9 +156,11 @@ func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
 	s.Require().NoError(err)
 
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
-		{ "url": "http://example.com", "alias": "abc123" }
-	`))
+	resp, err := http.Post(
+		s.server.URL+"/api",
+		"application/json",
+		strings.NewReader(`{ "url": "http://example.com", "alias": "abc123" }`),
+	)
 	s.Require().NoError(err)
 
 	// Assert
@@ -161,9 +169,13 @@ func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias_Invalid() {
 	// Act
-	resp, err := http.Post(s.server.URL, "application/json", strings.NewReader(`
-		{ "url": "http://example.com", "alias": "invalid_$lia4!" }
-	`))
+	resp, err := http.Post(
+		s.server.URL+"/api",
+		"application/json",
+		strings.NewReader(`
+			{ "url": "http://example.com", "alias": "invalid_$lia4!" }
+		`),
+	)
 	s.Require().NoError(err)
 
 	// Assert

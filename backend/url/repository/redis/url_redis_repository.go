@@ -23,7 +23,7 @@ func (r *urlRedisRepository) Get(key string) (string, error) {
 }
 
 func (r *urlRedisRepository) Create(key string, url string) error {
-	created, err := redis.Bool(r.conn.Do("SETNX", key, url, 0))
+	created, err := redis.Bool(r.conn.Do("SETNX", key, url))
 	if err != nil {
 		return err
 	}

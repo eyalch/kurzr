@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -8,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator"
+	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
 
 	"github.com/eyalch/shrtr/backend/domain"
@@ -19,13 +21,21 @@ var validate = validator.New()
 type urlHandler struct {
 	uc        domain.URLUsecase
 	originUrl *url.URL
+	logger    *log.Logger
 }
 
-func NewURLHandler(uc domain.URLUsecase, originUrl *url.URL) http.Handler {
-	h := urlHandler{uc, originUrl}
+func NewURLHandler(
+	uc domain.URLUsecase,
+	originUrl *url.URL,
+	redisPool *redis.Pool,
+	logger *log.Logger,
+) http.Handler {
+	h := urlHandler{uc, originUrl, logger}
+
+	middleware := newRateLimitMiddleware(redisPool)
 
 	r := chi.NewRouter()
-	r.Get("/{key}", h.redirect)
+	r.Method("GET", "/{key}", middleware.Handle(http.HandlerFunc(h.redirect)))
 	r.Post("/api", h.create)
 	return r
 }
@@ -34,15 +44,14 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 
 	longUrl, err := h.uc.GetLongURL(key)
-	if err != nil {
-		switch errors.Cause(err) {
-		case domain.ErrKeyNotFound:
-			render.Render(w, r, util.HTTPError(
-				http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
-			))
-		default:
-			render.Render(w, r, util.InternalServerError())
-		}
+	if errors.Cause(err) == domain.ErrKeyNotFound {
+		render.Render(w, r, util.HTTPError(
+			http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
+		))
+		return
+	} else if err != nil {
+		h.logger.Println("could not get long URL:", err)
+		render.Render(w, r, util.InternalServerError())
 		return
 	}
 
@@ -69,30 +78,24 @@ func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var key string
+	var err error
 
 	if data.Alias != "" {
 		key = data.Alias
-		err := h.uc.ShortenURLWithAlias(data.URL, data.Alias)
-
-		if err != nil {
-			switch errors.Cause(err) {
-			case domain.ErrDuplicateKey:
-				render.Render(w, r, util.HTTPError(
-					http.StatusConflict, domain.ErrDuplicateKeyCode, err.Error(),
-				))
-			default:
-				render.Render(w, r, util.InternalServerError())
-			}
-			return
-		}
+		err = h.uc.ShortenURLWithAlias(data.URL, data.Alias)
 	} else {
-		var err error
 		key, err = h.uc.ShortenURL(data.URL)
+	}
 
-		if err != nil {
-			render.Render(w, r, util.InternalServerError())
-			return
-		}
+	if errors.Cause(err) == domain.ErrDuplicateKey {
+		render.Render(w, r, util.HTTPError(
+			http.StatusConflict, domain.ErrDuplicateKeyCode, err.Error(),
+		))
+		return
+	} else if err != nil {
+		h.logger.Println("could not shorten URL:", err)
+		render.Render(w, r, util.InternalServerError())
+		return
 	}
 
 	originUrl := *h.originUrl

@@ -3,11 +3,13 @@ package http_test
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -32,7 +34,7 @@ func (s *urlHandlerTestSuite) SetupTest() {
 		urlMemoryRepo.NewURLMemoryRepository(),
 		urlKeyGenerator.NewURLKeyGenerator(),
 	)
-	h := urlHandler.NewURLHandler(s.uc, originUrl)
+	h := urlHandler.NewURLHandler(s.uc, originUrl, nil, log.Default())
 
 	s.server = httptest.NewServer(h)
 }
@@ -43,8 +45,7 @@ func (s *urlHandlerTestSuite) TearDownTest() {
 
 func (s *urlHandlerTestSuite) TestRedirect() {
 	// Arrange
-	key, err := s.uc.ShortenURL("http://example.com")
-	s.Require().NoError(err)
+	key, _ := s.uc.ShortenURL("http://example.com")
 
 	// Create an HTTP client which will NOT follow redirects
 	client := &http.Client{
@@ -54,8 +55,7 @@ func (s *urlHandlerTestSuite) TestRedirect() {
 	}
 
 	// Act
-	resp, err := client.Get(s.server.URL + "/" + key)
-	s.Require().NoError(err)
+	resp, _ := client.Get(s.server.URL + "/" + key)
 
 	// Assert
 	if s.Equal(http.StatusMovedPermanently, resp.StatusCode) {
@@ -65,36 +65,58 @@ func (s *urlHandlerTestSuite) TestRedirect() {
 
 func (s *urlHandlerTestSuite) TestRedirect_NotFound() {
 	// Act
-	resp, err := http.Get(s.server.URL + "/foo")
-	s.Require().NoError(err)
+	resp, _ := http.Get(s.server.URL + "/foo")
 
 	// Assert
 	s.Equal(http.StatusNotFound, resp.StatusCode)
 }
 
+func (s *urlHandlerTestSuite) TestRedirect_RateLimit() {
+	// Arrange
+	http.Get(s.server.URL + "/foo")
+	time.Sleep(2 * time.Second)
+	http.Get(s.server.URL + "/foo")
+	time.Sleep(2 * time.Second)
+
+	// Act
+	resp, _ := http.Get(s.server.URL + "/foo")
+
+	// Assert
+	s.Equal(http.StatusTooManyRequests, resp.StatusCode)
+}
+
+func (s *urlHandlerTestSuite) TestRedirect_RateLimit_NoError() {
+	// Arrange
+	http.Get(s.server.URL + "/foo")
+	time.Sleep(2 * time.Second)
+	http.Get(s.server.URL + "/foo")
+	time.Sleep(3 * time.Second)
+
+	// Act
+	resp, _ := http.Get(s.server.URL + "/foo")
+
+	// Assert
+	s.NotEqual(http.StatusTooManyRequests, resp.StatusCode)
+}
+
 func (s *urlHandlerTestSuite) TestCreate() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL+"/api",
-		"application/json",
+	resp, _ := http.Post(s.server.URL+"/api", "application/json",
 		strings.NewReader(`{ "url": "http://example.com" }`),
 	)
-	s.Require().NoError(err)
 
 	// Assert
 	s.Equal(http.StatusCreated, resp.StatusCode)
 
 	// Read response body
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	s.Require().NoError(err)
+	body, _ := ioutil.ReadAll(resp.Body)
 
 	// Convert JSON to struct
 	data := new(struct {
 		ShortURL string `json:"short_url"`
 	})
-	err = json.Unmarshal(body, data)
-	s.Require().NoError(err)
+	json.Unmarshal(body, data)
 
 	// Ensure the short URL has the expected form
 	s.Regexp("^http://example.com/[a-zA-Z0-9]+$", data.ShortURL)
@@ -102,8 +124,7 @@ func (s *urlHandlerTestSuite) TestCreate() {
 
 func (s *urlHandlerTestSuite) TestCreate_Invalid_EmptyURL() {
 	// Act
-	resp, err := http.Post(s.server.URL+"/api", "application/json", nil)
-	s.Require().NoError(err)
+	resp, _ := http.Post(s.server.URL+"/api", "application/json", nil)
 
 	// Assert
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
@@ -111,12 +132,9 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_EmptyURL() {
 
 func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL+"/api",
-		"application/json",
+	resp, _ := http.Post(s.server.URL+"/api", "application/json",
 		strings.NewReader(`{ "url": "example.com" }`),
 	)
-	s.Require().NoError(err)
 
 	// Assert
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
@@ -124,26 +142,21 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL+"/api",
-		"application/json",
+	resp, _ := http.Post(s.server.URL+"/api", "application/json",
 		strings.NewReader(`{ "url": "http://example.com", "alias": "abc123" }`),
 	)
-	s.Require().NoError(err)
 
 	// Assert
 	if s.Equal(http.StatusCreated, resp.StatusCode) {
 		// Read response body
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		s.Require().NoError(err)
+		body, _ := ioutil.ReadAll(resp.Body)
 
 		// Convert JSON to struct
 		data := new(struct {
 			ShortURL string `json:"short_url"`
 		})
-		err = json.Unmarshal(body, data)
-		s.Require().NoError(err)
+		json.Unmarshal(body, data)
 
 		// Ensure the short URL has the expected form
 		s.Equal("http://example.com/abc123", data.ShortURL)
@@ -152,16 +165,12 @@ func (s *urlHandlerTestSuite) TestCreate_Alias() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
 	// Arrange
-	err := s.uc.ShortenURLWithAlias("http://example.com", "abc123")
-	s.Require().NoError(err)
+	s.uc.ShortenURLWithAlias("http://example.com", "abc123")
 
 	// Act
-	resp, err := http.Post(
-		s.server.URL+"/api",
-		"application/json",
+	resp, _ := http.Post(s.server.URL+"/api", "application/json",
 		strings.NewReader(`{ "url": "http://example.com", "alias": "abc123" }`),
 	)
-	s.Require().NoError(err)
 
 	// Assert
 	s.Equal(http.StatusConflict, resp.StatusCode)
@@ -169,14 +178,11 @@ func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias_Invalid() {
 	// Act
-	resp, err := http.Post(
-		s.server.URL+"/api",
-		"application/json",
+	resp, _ := http.Post(s.server.URL+"/api", "application/json",
 		strings.NewReader(`
 			{ "url": "http://example.com", "alias": "invalid_$lia4!" }
 		`),
 	)
-	s.Require().NoError(err)
 
 	// Assert
 	s.Equal(http.StatusBadRequest, resp.StatusCode)

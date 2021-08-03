@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/go-redis/redis/v8"
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/pkg/errors"
 
@@ -26,68 +25,65 @@ import (
 )
 
 func getAddr() string {
-	if port := os.Getenv("PORT"); port != "" {
-		return fmt.Sprintf(":%s", port)
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		return ":3000"
 	}
-	return ":3000"
+	return fmt.Sprintf(":%s", port)
 }
 
 func getOriginURL() (*url.URL, error) {
-	origin := os.Getenv("URL")
-	if origin == "" {
+	origin, ok := os.LookupEnv("URL")
+	if !ok {
 		return nil, errors.New("URL environment variable is required")
 	}
 	return url.Parse(origin)
 }
 
-func initRedis() (*redis.Client, error) {
-	redisUrl := os.Getenv("REDIS_URL")
-
-	if redisUrl == "" {
-		return nil, nil
+func newRedisPool(url string) *redis.Pool {
+	return &redis.Pool{
+		MaxActive:   0,
+		IdleTimeout: 10 * time.Second,
+		Dial:        func() (redis.Conn, error) { return redis.DialURL(url) },
+		TestOnBorrow: func(c redis.Conn, _ time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
 	}
-
-	redisOptions, err := redis.ParseURL(redisUrl)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not parse the given Redis URL")
-	}
-
-	rdb := redis.NewClient(redisOptions)
-
-	err = rdb.Ping(context.Background()).Err()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not ping Redis")
-	}
-
-	return rdb, nil
 }
 
-func getUrlHandler(originUrl *url.URL, rdb *redis.Client) http.Handler {
+func newUrlHandler(
+	originUrl *url.URL,
+	redisPool *redis.Pool,
+	logger *log.Logger,
+) http.Handler {
 	var repo domain.URLRepository
-	if rdb != nil {
-		repo = urlRedisRepo.NewURLRedisRepository(rdb)
+	if redisPool != nil {
+		repo = urlRedisRepo.NewURLRedisRepository(redisPool.Get())
 	} else {
 		repo = urlMemoryRepo.NewURLMemoryRepository()
 	}
 
 	return urlHandler.NewURLHandler(
-		urlUsecase.NewURLUsecase(
-			repo,
-			urlKeyGenerator.NewURLKeyGenerator(),
-		),
+		urlUsecase.NewURLUsecase(repo, urlKeyGenerator.NewURLKeyGenerator()),
 		originUrl,
+		redisPool,
+		logger,
 	)
 }
 
 func main() {
+	logger := log.Default()
+
 	originUrl, err := getOriginURL()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
-	rdb, err := initRedis()
-	if err != nil {
-		log.Fatal(err)
+	var redisPool *redis.Pool = nil
+	if redisURL, ok := os.LookupEnv("REDIS_URL"); ok {
+		redisPool = newRedisPool(redisURL)
+		defer redisPool.Close()
 	}
 
 	r := chi.NewRouter()
@@ -96,17 +92,18 @@ func main() {
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
-	r.Use(middleware.Timeout(time.Second * 15))
+	r.Use(middleware.Timeout(15 * time.Second))
 
-	r.Mount("/", getUrlHandler(originUrl, rdb))
+	r.Mount("/", newUrlHandler(originUrl, redisPool, logger))
 
-	addr := getAddr()
-
-	listenFunc := gateway.ListenAndServe
-	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
-		listenFunc = http.ListenAndServe
+	// By the existence of the AWS_LAMBDA_FUNCTION_NAME environment variable we
+	// can tell that we're running in AWS Lambda (Netlify Function), and if not,
+	// we just start a regular HTTP server.
+	if _, ok := os.LookupEnv("AWS_LAMBDA_FUNCTION_NAME"); !ok {
+		addr := getAddr()
 		log.Println("Listening at " + addr)
+		logger.Fatal(http.ListenAndServe(addr, r))
 	}
 
-	log.Fatal(listenFunc(addr, r))
+	gateway.ListenAndServe("", r)
 }

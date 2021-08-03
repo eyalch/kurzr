@@ -42,6 +42,7 @@ func NewURLHandler(
 
 func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
+	h.logger.Println("[DEBUG] key:", key)
 
 	longUrl, err := h.uc.GetLongURL(key)
 	if errors.Cause(err) == domain.ErrKeyNotFound {

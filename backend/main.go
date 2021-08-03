@@ -73,7 +73,7 @@ func newUrlHandler(
 }
 
 func main() {
-	logger := log.Default()
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 
 	originUrl, err := getOriginURL()
 	if err != nil {

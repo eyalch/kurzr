@@ -13,11 +13,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/eyalch/shrtr/backend/domain"
-	urlHandler "github.com/eyalch/shrtr/backend/url/delivery/http"
-	urlKeyGenerator "github.com/eyalch/shrtr/backend/url/keygen"
-	urlMemoryRepo "github.com/eyalch/shrtr/backend/url/repository/memory"
-	urlUsecase "github.com/eyalch/shrtr/backend/url/usecase"
+	"github.com/eyalch/kurzr/backend/domain"
+	urlHandler "github.com/eyalch/kurzr/backend/url/delivery/http"
+	urlKeyGenerator "github.com/eyalch/kurzr/backend/url/keygen"
+	urlMemoryRepo "github.com/eyalch/kurzr/backend/url/repository/memory"
+	urlUsecase "github.com/eyalch/kurzr/backend/url/usecase"
 )
 
 type urlHandlerTestSuite struct {

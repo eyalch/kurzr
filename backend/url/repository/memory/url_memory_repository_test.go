@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/eyalch/shrtr/backend/domain"
-	"github.com/eyalch/shrtr/backend/url/repository/memory"
+	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/url/repository/memory"
 )
 
 type URLMemoryRepositoryTestSuite struct {

@@ -1,4 +1,4 @@
-module github.com/eyalch/shrtr/backend
+module github.com/eyalch/kurzr/backend
 
 go 1.16
 

@@ -3,9 +3,9 @@
   publish = "site"
 
 [build.environment]
-  GO_IMPORT_PATH = "github.com/eyalch/shrtr"
+  GO_IMPORT_PATH = "github.com/eyalch/kurzr"
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/shrtr/:splat"
+  to = "/.netlify/functions/kurzr/:splat"
   status = 200

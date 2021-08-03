@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/eyalch/shrtr/backend/domain"
+	"github.com/eyalch/kurzr/backend/domain"
 )
 
 const (

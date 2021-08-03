@@ -12,8 +12,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
 
-	"github.com/eyalch/shrtr/backend/domain"
-	"github.com/eyalch/shrtr/backend/util"
+	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/util"
 )
 
 var validate = validator.New()

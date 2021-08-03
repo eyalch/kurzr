@@ -16,12 +16,12 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/pkg/errors"
 
-	"github.com/eyalch/shrtr/backend/domain"
-	urlHandler "github.com/eyalch/shrtr/backend/url/delivery/http"
-	urlKeyGenerator "github.com/eyalch/shrtr/backend/url/keygen"
-	urlMemoryRepo "github.com/eyalch/shrtr/backend/url/repository/memory"
-	urlRedisRepo "github.com/eyalch/shrtr/backend/url/repository/redis"
-	urlUsecase "github.com/eyalch/shrtr/backend/url/usecase"
+	"github.com/eyalch/kurzr/backend/domain"
+	urlHandler "github.com/eyalch/kurzr/backend/url/delivery/http"
+	urlKeyGenerator "github.com/eyalch/kurzr/backend/url/keygen"
+	urlMemoryRepo "github.com/eyalch/kurzr/backend/url/repository/memory"
+	urlRedisRepo "github.com/eyalch/kurzr/backend/url/repository/redis"
+	urlUsecase "github.com/eyalch/kurzr/backend/url/usecase"
 )
 
 func getAddr() string {

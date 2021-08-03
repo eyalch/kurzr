@@ -3,7 +3,7 @@ package redis
 import (
 	"github.com/gomodule/redigo/redis"
 
-	"github.com/eyalch/shrtr/backend/domain"
+	"github.com/eyalch/kurzr/backend/domain"
 )
 
 type urlRedisRepository struct {

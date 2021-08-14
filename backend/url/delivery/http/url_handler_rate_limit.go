@@ -31,7 +31,7 @@ func newMemoryStore() limiter.Store {
 	return store
 }
 
-func newRateLimitMiddleware(redisPool *redis.Pool) *httplimit.Middleware {
+func newRateLimitMiddleware(redisPool *redis.Pool, isLambda bool) *httplimit.Middleware {
 	var store limiter.Store
 	if redisPool != nil {
 		store = newRedisStore(redisPool)
@@ -39,6 +39,13 @@ func newRateLimitMiddleware(redisPool *redis.Pool) *httplimit.Middleware {
 		store = newMemoryStore()
 	}
 
-	middleware, _ := httplimit.NewMiddleware(store, httplimit.IPKeyFunc())
+	var keyFunc httplimit.KeyFunc
+	if isLambda {
+		keyFunc = httplimit.IPKeyFunc("X-Forwarded-For")
+	} else {
+		keyFunc = httplimit.IPKeyFunc()
+	}
+
+	middleware, _ := httplimit.NewMiddleware(store, keyFunc)
 	return middleware
 }

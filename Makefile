@@ -1,5 +1,5 @@
-build-netlify-function:
+build-lambda:
 	mkdir -p functions
 	$(MAKE) -C backend download build OUTPUT="$(PWD)/functions/kurzr"
 
-build: build-netlify-function
+build: build-lambda

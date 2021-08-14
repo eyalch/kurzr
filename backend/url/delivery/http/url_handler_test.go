@@ -34,7 +34,7 @@ func (s *urlHandlerTestSuite) SetupTest() {
 		urlMemoryRepo.NewURLMemoryRepository(),
 		urlKeyGenerator.NewURLKeyGenerator(),
 	)
-	h := urlHandler.NewURLHandler(s.uc, originUrl, nil, log.Default())
+	h := urlHandler.NewURLHandler(s.uc, originUrl, nil, log.Default(), false)
 
 	s.server = httptest.NewServer(h)
 }

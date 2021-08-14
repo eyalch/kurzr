@@ -29,10 +29,11 @@ func NewURLHandler(
 	originUrl *url.URL,
 	redisPool *redis.Pool,
 	logger *log.Logger,
+	isLambda bool,
 ) http.Handler {
 	h := urlHandler{uc, originUrl, logger}
 
-	middleware := newRateLimitMiddleware(redisPool)
+	middleware := newRateLimitMiddleware(redisPool, isLambda)
 
 	r := chi.NewRouter()
 	r.Method("GET", "/{key}", middleware.Handle(http.HandlerFunc(h.redirect)))
@@ -42,7 +43,6 @@ func NewURLHandler(
 
 func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
-	h.logger.Println("[DEBUG] key:", key)
 
 	longUrl, err := h.uc.GetLongURL(key)
 	if errors.Cause(err) == domain.ErrKeyNotFound {

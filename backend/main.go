@@ -52,24 +52,24 @@ func newRedisPool(url string) *redis.Pool {
 	}
 }
 
+func newUrlRepo(redisPool *redis.Pool) domain.URLRepository {
+	if redisPool == nil {
+		return urlMemoryRepo.NewURLMemoryRepository()
+	}
+	return urlRedisRepo.NewURLRedisRepository(redisPool.Get())
+}
+
 func newUrlHandler(
 	originUrl *url.URL,
 	redisPool *redis.Pool,
 	logger *log.Logger,
+	isLambda bool,
 ) http.Handler {
-	var repo domain.URLRepository
-	if redisPool != nil {
-		repo = urlRedisRepo.NewURLRedisRepository(redisPool.Get())
-	} else {
-		repo = urlMemoryRepo.NewURLMemoryRepository()
-	}
-
-	return urlHandler.NewURLHandler(
-		urlUsecase.NewURLUsecase(repo, urlKeyGenerator.NewURLKeyGenerator()),
-		originUrl,
-		redisPool,
-		logger,
+	uc := urlUsecase.NewURLUsecase(
+		newUrlRepo(redisPool),
+		urlKeyGenerator.NewURLKeyGenerator(),
 	)
+	return urlHandler.NewURLHandler(uc, originUrl, redisPool, logger, isLambda)
 }
 
 func main() {
@@ -94,18 +94,14 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(middleware.Timeout(15 * time.Second))
 
-	r.HandleFunc("/headers", func(w http.ResponseWriter, r *http.Request) {
-		for k, v := range r.Header {
-			fmt.Printf("%v: %v\n", k, v)
-		}
-	})
-
-	r.Mount("/", newUrlHandler(originUrl, redisPool, logger))
-
 	// By the existence of the AWS_LAMBDA_FUNCTION_NAME environment variable we
-	// can tell that we're running in AWS Lambda (Netlify Function), and if not,
-	// we just start a regular HTTP server.
-	if _, ok := os.LookupEnv("AWS_LAMBDA_FUNCTION_NAME"); !ok {
+	// can tell that we're running in AWS Lambda
+	_, isLambda := os.LookupEnv("AWS_LAMBDA_FUNCTION_NAME")
+
+	r.Mount("/", newUrlHandler(originUrl, redisPool, logger, isLambda))
+
+	// If not running in a AWS Lambda we just start a regular HTTP server
+	if isLambda {
 		addr := getAddr()
 		log.Println("Listening at " + addr)
 		logger.Fatal(http.ListenAndServe(addr, r))

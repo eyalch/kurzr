@@ -94,6 +94,12 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(middleware.Timeout(15 * time.Second))
 
+	r.HandleFunc("/headers", func(w http.ResponseWriter, r *http.Request) {
+		for k, v := range r.Header {
+			fmt.Printf("%v: %v\n", k, v)
+		}
+	})
+
 	r.Mount("/", newUrlHandler(originUrl, redisPool, logger))
 
 	// By the existence of the AWS_LAMBDA_FUNCTION_NAME environment variable we

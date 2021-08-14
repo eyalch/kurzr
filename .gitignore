@@ -2,7 +2,3 @@
 .netlify/
 
 functions/
-
-.env
-
-site/

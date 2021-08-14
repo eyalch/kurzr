@@ -1,6 +1,6 @@
 import { faLink, faTag } from "@fortawesome/free-solid-svg-icons"
 import axios from "axios"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
 import Button from "./Button"
 import Input from "./Input"
@@ -9,7 +9,7 @@ type FormProps = {
   onSuccess: (url: string, shortUrl: string) => void
 }
 
-interface IFormInput {
+type IFormInput = {
   url: string
   alias: string
 }
@@ -17,6 +17,9 @@ interface IFormInput {
 // TODO: Add share option (on mobile)
 // TODO: Add QR code
 // TODO: Add unit tests
+
+const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_KEY!
+
 const isValidUrl = (string: string) => {
   try {
     new URL(string)
@@ -26,9 +29,17 @@ const isValidUrl = (string: string) => {
   }
 }
 
+const loadScriptByURL = (url: string, callback: () => void) => {
+  const script = document.createElement("script")
+  script.type = "text/javascript"
+  script.src = url
+  if (callback) script.onload = callback
+
+  document.body.appendChild(script)
+}
+
 const Form = ({ onSuccess }: FormProps) => {
-  const [loading, setLoading] = useState(false)
-  // const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
 
   const {
     register,
@@ -44,8 +55,16 @@ const Form = ({ onSuccess }: FormProps) => {
   const shortenUrl: SubmitHandler<IFormInput> = async ({ alias, url }) => {
     setLoading(true)
 
+    const token = await window.grecaptcha.execute(recaptchaKey, {
+      action: "submit",
+    })
+
     try {
-      const { data } = await axios.post("/api", { url: urlWithSchema, alias })
+      const { data } = await axios.post("/api", {
+        url: urlWithSchema,
+        alias,
+        token,
+      })
       onSuccess(url, data.short_url)
     } catch (error) {
       setLoading(false)
@@ -57,6 +76,13 @@ const Form = ({ onSuccess }: FormProps) => {
       }
     }
   }
+
+  useEffect(() => {
+    loadScriptByURL(
+      `https://www.google.com/recaptcha/api.js?render=${recaptchaKey}`,
+      () => setLoading(false)
+    )
+  }, [])
 
   return (
     <form onSubmit={handleSubmit(shortenUrl)} autoComplete="off">

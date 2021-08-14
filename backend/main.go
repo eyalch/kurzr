@@ -101,7 +101,7 @@ func main() {
 	r.Mount("/", newUrlHandler(originUrl, redisPool, logger, isLambda))
 
 	// If not running in a AWS Lambda we just start a regular HTTP server
-	if isLambda {
+	if !isLambda {
 		addr := getAddr()
 		log.Println("Listening at " + addr)
 		logger.Fatal(http.ListenAndServe(addr, r))

@@ -3,6 +3,9 @@
   command = "make -C .. build"
   publish = "out"
 
+[functions]
+  directory = "frontend/functions"
+
 [build.environment]
   GO_IMPORT_PATH = "github.com/eyalch/kurzr"
 

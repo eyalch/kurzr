@@ -1,6 +1,6 @@
 [build]
   base = "frontend"
-  command = "make build"
+  command = "make -C .. build"
   publish = "out"
 
 [build.environment]

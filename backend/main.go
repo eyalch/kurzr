@@ -11,6 +11,7 @@ import (
 	"github.com/apex/gateway"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/joho/godotenv/autoload"
@@ -81,6 +82,12 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(middleware.Timeout(15 * time.Second))
+
+	if len(e.AllowedOrigins) > 0 {
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins: e.AllowedOrigins,
+		}))
+	}
 
 	r.Mount("/", newUrlHandler(e.URL, redisPool, recaptchaVerifier, logger, e.IsLambda))
 

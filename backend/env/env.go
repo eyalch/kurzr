@@ -31,6 +31,7 @@ type envSpec struct {
 	RedisURL                string     `envconfig:"REDIS_URL"`
 	ReCAPTCHASecret         string     `envconfig:"RECAPTCHA_SECRET" required:"true"`
 	ReCAPTCHAScoreThreshold float32    `envconfig:"RECAPTCHA_SCORE_THRESHOLD" default:"0.5"`
+	AllowedOrigins          []string   `envconfig:"ALLOWED_ORIGINS"`
 
 	// By the existence of the AWS_LAMBDA_FUNCTION_NAME environment variable we
 	// can tell that we're running in AWS Lambda
@@ -43,6 +44,7 @@ type EnvSpec struct {
 	RedisURL                string
 	ReCAPTCHASecret         string
 	ReCAPTCHAScoreThreshold float32
+	AllowedOrigins          []string
 	IsLambda                bool
 }
 
@@ -56,6 +58,7 @@ func GetEnv() EnvSpec {
 		RedisURL:                e.RedisURL,
 		ReCAPTCHASecret:         e.ReCAPTCHASecret,
 		ReCAPTCHAScoreThreshold: e.ReCAPTCHAScoreThreshold,
+		AllowedOrigins:          e.AllowedOrigins,
 		IsLambda:                bool(e.IsLambda),
 	}
 }

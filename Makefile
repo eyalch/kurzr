@@ -4,7 +4,7 @@ build-lambda:
 
 build-frontend:
 	npm run --prefix frontend/ build
-	rm -r site
+	rm -r site || true
 	mv frontend/out site
 
 build: build-lambda build-frontend

@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["eyalch", "kurzr"]
+  "cSpell.words": ["eyalch", "kurzr"],
+  "typescript.tsdk": "frontend/node_modules/typescript/lib"
 }

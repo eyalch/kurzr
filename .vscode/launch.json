@@ -7,10 +7,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/backend/main.go",
-      "env": {
-        "PORT": "3000",
-        "URL": "http://localhost:3000"
-      }
+      "envFile": "${workspaceFolder}/backend/.env"
     }
   ]
 }

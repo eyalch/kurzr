@@ -8,35 +8,39 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/go-playground/validator"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+	"github.com/sethvargo/go-limiter/httplimit"
 
 	"github.com/eyalch/kurzr/backend/domain"
 	"github.com/eyalch/kurzr/backend/util"
 )
 
+const (
+	errInvalidReCAPTCHATokenCode = "ERR_INVALID_RECAPTCHA_TOKEN"
+	errDuplicateKeyCode          = "ERR_DUPLICATE_KEY"
+)
+
 var validate = validator.New()
 
 type urlHandler struct {
-	uc        domain.URLUsecase
-	originUrl *url.URL
-	logger    *log.Logger
+	uc                domain.URLUsecase
+	originUrl         *url.URL
+	recaptchaVerifier domain.ReCAPTCHAVerifier
+	logger            *log.Logger
 }
 
 func NewURLHandler(
 	uc domain.URLUsecase,
 	originUrl *url.URL,
-	redisPool *redis.Pool,
+	recaptchaVerifier domain.ReCAPTCHAVerifier,
 	logger *log.Logger,
-	isLambda bool,
+	ratelimitMiddleware *httplimit.Middleware,
 ) http.Handler {
-	h := urlHandler{uc, originUrl, logger}
-
-	middleware := newRateLimitMiddleware(redisPool, isLambda)
+	h := urlHandler{uc, originUrl, recaptchaVerifier, logger}
 
 	r := chi.NewRouter()
-	r.Method("GET", "/{key}", middleware.Handle(http.HandlerFunc(h.redirect)))
+	r.Method("GET", "/{key}", ratelimitMiddleware.Handle(http.HandlerFunc(h.redirect)))
 	r.Post("/api", h.create)
 	return r
 }
@@ -46,9 +50,7 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 
 	longUrl, err := h.uc.GetLongURL(key)
 	if errors.Cause(err) == domain.ErrKeyNotFound {
-		render.Render(w, r, util.HTTPError(
-			http.StatusNotFound, domain.ErrKeyNotFoundCode, err.Error(),
-		))
+		http.NotFound(w, r)
 		return
 	} else if err != nil {
 		h.logger.Println("could not get long URL:", err)
@@ -62,6 +64,7 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 type createRequestPayload struct {
 	URL   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias" validate:"omitempty,alphanum"`
+	Token string `json:"token" validate:"required"`
 }
 
 func (p *createRequestPayload) Bind(r *http.Request) error {
@@ -78,8 +81,22 @@ func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	valid, err := h.recaptchaVerifier.Verify(data.Token, "submit")
+	if err != nil {
+		h.logger.Println("could not verify reCAPTCHA token:", err)
+		render.Render(w, r, util.InternalServerError())
+		return
+	}
+	if !valid {
+		render.Render(w, r, util.HTTPError(
+			http.StatusForbidden,
+			errInvalidReCAPTCHATokenCode,
+			"invalid reCAPTCHA token",
+		))
+		return
+	}
+
 	var key string
-	var err error
 
 	if data.Alias != "" {
 		key = data.Alias
@@ -90,7 +107,7 @@ func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Cause(err) == domain.ErrDuplicateKey {
 		render.Render(w, r, util.HTTPError(
-			http.StatusConflict, domain.ErrDuplicateKeyCode, err.Error(),
+			http.StatusConflict, errDuplicateKeyCode, err.Error(),
 		))
 		return
 	} else if err != nil {

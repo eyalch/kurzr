@@ -5,6 +5,10 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import Button from "./Button"
 import Input from "./Input"
 
+const http = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "",
+})
+
 type FormProps = {
   onSuccess: (url: string, shortUrl: string) => void
 }
@@ -60,7 +64,7 @@ const Form = ({ onSuccess }: FormProps) => {
     })
 
     try {
-      const { data } = await axios.post("/api", {
+      const { data } = await http.post("/api", {
         url: urlWithSchema,
         alias,
         token,

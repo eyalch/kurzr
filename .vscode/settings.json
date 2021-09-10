@@ -1,4 +1,5 @@
 {
   "cSpell.words": ["eyalch", "kurzr"],
-  "typescript.tsdk": "frontend/node_modules/typescript/lib"
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "conventionalCommits.scopes": ["frontend"]
 }

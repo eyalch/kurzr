@@ -67,7 +67,7 @@ type createRequestPayload struct {
 	Token string `json:"token" validate:"required"`
 }
 
-func (p *createRequestPayload) Bind(r *http.Request) error {
+func (p *createRequestPayload) Bind(*http.Request) error {
 	return validate.Struct(p)
 }
 

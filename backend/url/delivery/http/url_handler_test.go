@@ -30,7 +30,7 @@ type urlHandlerTestSuite struct {
 
 type reCAPTCHAVerifier struct{}
 
-func (*reCAPTCHAVerifier) Verify(response string, action string) (bool, error) {
+func (*reCAPTCHAVerifier) Verify(response string, _ string) (bool, error) {
 	return response == "token", nil
 }
 
@@ -84,9 +84,9 @@ func (s *urlHandlerTestSuite) TestRedirect_NotFound() {
 
 func (s *urlHandlerTestSuite) TestRedirect_RateLimit() {
 	// Arrange
-	http.Get(s.server.URL + "/foo")
+	_, _ = http.Get(s.server.URL + "/foo")
 	time.Sleep(2 * time.Second)
-	http.Get(s.server.URL + "/foo")
+	_, _ = http.Get(s.server.URL + "/foo")
 	time.Sleep(2 * time.Second)
 
 	// Act
@@ -98,9 +98,9 @@ func (s *urlHandlerTestSuite) TestRedirect_RateLimit() {
 
 func (s *urlHandlerTestSuite) TestRedirect_RateLimit_NoError() {
 	// Arrange
-	http.Get(s.server.URL + "/foo")
+	_, _ = http.Get(s.server.URL + "/foo")
 	time.Sleep(2 * time.Second)
-	http.Get(s.server.URL + "/foo")
+	_, _ = http.Get(s.server.URL + "/foo")
 	time.Sleep(3 * time.Second)
 
 	// Act
@@ -127,7 +127,7 @@ func (s *urlHandlerTestSuite) TestCreate() {
 	data := new(struct {
 		ShortURL string `json:"short_url"`
 	})
-	json.Unmarshal(body, data)
+	_ = json.Unmarshal(body, data)
 
 	// Ensure the short URL has the expected form
 	s.Regexp("^http://example.com/[a-zA-Z0-9]+$", data.ShortURL)
@@ -156,7 +156,7 @@ func (s *urlHandlerTestSuite) TestCreate_Invalid_BadURL() {
 			Code  string `json:"code"`
 			Error string `json:"error"`
 		})
-		json.Unmarshal(body, data)
+		_ = json.Unmarshal(body, data)
 
 		s.Equal("ERR_VALIDATION", data.Code)
 	}
@@ -177,7 +177,7 @@ func (s *urlHandlerTestSuite) TestCreate_NoToken() {
 			Code  string `json:"code"`
 			Error string `json:"error"`
 		})
-		json.Unmarshal(body, data)
+		_ = json.Unmarshal(body, data)
 
 		s.Equal("ERR_VALIDATION", data.Code)
 	}
@@ -203,7 +203,7 @@ func (s *urlHandlerTestSuite) TestCreate_InvalidToken() {
 			Code  string `json:"code"`
 			Error string `json:"error"`
 		})
-		json.Unmarshal(body, data)
+		_ = json.Unmarshal(body, data)
 
 		s.Equal("ERR_INVALID_RECAPTCHA_TOKEN", data.Code)
 	}
@@ -231,7 +231,7 @@ func (s *urlHandlerTestSuite) TestCreate_Alias() {
 		data := new(struct {
 			ShortURL string `json:"short_url"`
 		})
-		json.Unmarshal(body, data)
+		_ = json.Unmarshal(body, data)
 
 		// Ensure the short URL has the expected form
 		s.Equal("http://example.com/abc123", data.ShortURL)
@@ -240,7 +240,7 @@ func (s *urlHandlerTestSuite) TestCreate_Alias() {
 
 func (s *urlHandlerTestSuite) TestCreate_Alias_Duplicate() {
 	// Arrange
-	s.uc.ShortenURLWithAlias("http://example.com", "abc123")
+	_ = s.uc.ShortenURLWithAlias("http://example.com", "abc123")
 
 	// Act
 	resp, _ := http.Post(s.server.URL+"/api", "application/json",

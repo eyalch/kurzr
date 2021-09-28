@@ -70,7 +70,12 @@ func main() {
 	var redisPool *redis.Pool = nil
 	if e.RedisURL != "" {
 		redisPool = newRedisPool(e.RedisURL)
-		defer redisPool.Close()
+
+		defer func() {
+			if err := redisPool.Close(); err != nil {
+				logger.Fatal("failed closing Redis pool:", err)
+			}
+		}()
 	}
 
 	recaptchaVerifier := recaptcha.NewReCAPTCHAVerifier(e.ReCAPTCHASecret, e.ReCAPTCHAScoreThreshold)
@@ -91,12 +96,12 @@ func main() {
 
 	r.Mount("/", newUrlHandler(e.URL, redisPool, recaptchaVerifier, logger, e.IsLambda))
 
-	// If not running in a AWS Lambda we just start a normal HTTP server
+	// If not running in AWS Lambda we just start a normal HTTP server
 	if !e.IsLambda {
 		addr := fmt.Sprintf(":%d", e.Port)
 		log.Println("Listening at " + addr)
 		logger.Fatal(http.ListenAndServe(addr, r))
 	}
 
-	gateway.ListenAndServe("", r)
+	logger.Fatal(gateway.ListenAndServe("", r))
 }

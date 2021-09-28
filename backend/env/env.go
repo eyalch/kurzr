@@ -9,18 +9,18 @@ import (
 type urlDecoder url.URL
 
 func (ud *urlDecoder) Decode(value string) error {
-	url, err := url.Parse(value)
+	u, err := url.Parse(value)
 	if err != nil {
 		return err
 	}
 
-	*ud = urlDecoder(*url)
+	*ud = urlDecoder(*u)
 	return nil
 }
 
 type existsDecoder bool
 
-func (ed *existsDecoder) Decode(value string) error {
+func (ed *existsDecoder) Decode(string) error {
 	*ed = true
 	return nil
 }
@@ -38,7 +38,7 @@ type envSpec struct {
 	IsLambda existsDecoder `envconfig:"AWS_LAMBDA_FUNCTION_NAME"`
 }
 
-type EnvSpec struct {
+type Spec struct {
 	Port                    int
 	URL                     *url.URL
 	RedisURL                string
@@ -48,11 +48,11 @@ type EnvSpec struct {
 	IsLambda                bool
 }
 
-func GetEnv() EnvSpec {
+func GetEnv() Spec {
 	var e envSpec
 	envconfig.MustProcess("", &e)
 
-	return EnvSpec{
+	return Spec{
 		Port:                    e.Port,
 		URL:                     (*url.URL)(&e.URL),
 		RedisURL:                e.RedisURL,

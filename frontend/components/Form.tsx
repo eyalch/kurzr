@@ -43,7 +43,8 @@ const loadScriptByURL = (url: string, callback: () => void) => {
 }
 
 const Form = ({ onSuccess }: FormProps) => {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [recaptchaLoading, setRecaptchaLoading] = useState(true)
 
   const {
     register,
@@ -82,9 +83,10 @@ const Form = ({ onSuccess }: FormProps) => {
   }
 
   useEffect(() => {
+    setRecaptchaLoading(true)
     loadScriptByURL(
       `https://www.google.com/recaptcha/api.js?render=${recaptchaKey}`,
-      () => setLoading(false)
+      () => setRecaptchaLoading(false)
     )
   }, [])
 
@@ -112,7 +114,7 @@ const Form = ({ onSuccess }: FormProps) => {
 
       <Button
         label="Shorten URL"
-        disabled={!isValidUrl(urlWithSchema)}
+        disabled={!isValidUrl(urlWithSchema) || recaptchaLoading}
         loading={loading}
       />
     </form>

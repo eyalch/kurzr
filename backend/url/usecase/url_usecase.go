@@ -3,18 +3,18 @@ package usecase
 import (
 	"github.com/pkg/errors"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 )
 
 type urlUsecase struct {
-	repo         domain.URLRepository
-	keyGenerator domain.URLKeyGenerator
+	repo         core.URLRepository
+	keyGenerator core.URLKeyGenerator
 }
 
 func NewURLUsecase(
-	repo domain.URLRepository,
-	keyGenerator domain.URLKeyGenerator,
-) domain.URLUsecase {
+	repo core.URLRepository,
+	keyGenerator core.URLKeyGenerator,
+) core.URLUsecase {
 	return &urlUsecase{repo, keyGenerator}
 }
 
@@ -27,7 +27,7 @@ func (uc *urlUsecase) ShortenURL(url string) (string, error) {
 	err := uc.repo.Create(key, url)
 
 	// Keep retrying if the generated key already exists (only if no alias was provided)
-	for errors.Cause(err) == domain.ErrDuplicateKey {
+	for errors.Cause(err) == core.ErrDuplicateKey {
 		key = uc.keyGenerator.GenerateKey()
 		err = uc.repo.Create(key, url)
 	}

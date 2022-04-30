@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-limiter/httplimit"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 	"github.com/eyalch/kurzr/backend/util"
 )
 
@@ -24,16 +24,16 @@ const (
 var validate = validator.New()
 
 type urlHandler struct {
-	uc                domain.URLUsecase
+	uc                core.URLUsecase
 	originUrl         *url.URL
-	recaptchaVerifier domain.ReCAPTCHAVerifier
+	recaptchaVerifier core.ReCAPTCHAVerifier
 	logger            *log.Logger
 }
 
 func NewURLHandler(
-	uc domain.URLUsecase,
+	uc core.URLUsecase,
 	originUrl *url.URL,
-	recaptchaVerifier domain.ReCAPTCHAVerifier,
+	recaptchaVerifier core.ReCAPTCHAVerifier,
 	logger *log.Logger,
 	ratelimitMiddleware *httplimit.Middleware,
 ) http.Handler {
@@ -49,7 +49,7 @@ func (h *urlHandler) redirect(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 
 	longUrl, err := h.uc.GetLongURL(key)
-	if errors.Cause(err) == domain.ErrKeyNotFound {
+	if errors.Cause(err) == core.ErrKeyNotFound {
 		http.NotFound(w, r)
 		return
 	} else if err != nil {
@@ -105,7 +105,7 @@ func (h *urlHandler) create(w http.ResponseWriter, r *http.Request) {
 		key, err = h.uc.ShortenURL(data.URL)
 	}
 
-	if errors.Cause(err) == domain.ErrDuplicateKey {
+	if errors.Cause(err) == core.ErrDuplicateKey {
 		render.Render(w, r, util.HTTPError(
 			http.StatusConflict, errDuplicateKeyCode, err.Error(),
 		))

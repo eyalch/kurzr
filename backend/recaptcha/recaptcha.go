@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 )
 
 const verifyURL = "https://www.google.com/recaptcha/api/siteverify"
@@ -16,7 +16,7 @@ type reCAPTCHAVerifier struct {
 	scoreThreshold float32
 }
 
-func NewReCAPTCHAVerifier(secret string, scoreThreshold float32) domain.ReCAPTCHAVerifier {
+func NewReCAPTCHAVerifier(secret string, scoreThreshold float32) core.ReCAPTCHAVerifier {
 	return &reCAPTCHAVerifier{secret, scoreThreshold}
 }
 

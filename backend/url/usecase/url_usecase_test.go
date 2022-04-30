@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 	"github.com/eyalch/kurzr/backend/url/repository/memory"
 	"github.com/eyalch/kurzr/backend/url/usecase"
 )
@@ -14,8 +14,8 @@ import (
 type URLUsecaseTestSuite struct {
 	suite.Suite
 
-	repo domain.URLRepository
-	uc   domain.URLUsecase
+	repo core.URLRepository
+	uc   core.URLUsecase
 }
 
 type testKeyGenerator struct {
@@ -56,7 +56,7 @@ func (s *URLUsecaseTestSuite) TestGetLongURL_NotFound() {
 	_, err := s.uc.GetLongURL("abc123")
 
 	// Assert
-	s.ErrorIs(err, domain.ErrKeyNotFound)
+	s.ErrorIs(err, core.ErrKeyNotFound)
 }
 
 func (s *URLUsecaseTestSuite) TestShortenURL() {
@@ -95,7 +95,7 @@ func (s *URLUsecaseTestSuite) TestShortenURLWithAlias_Duplicate() {
 	err = s.uc.ShortenURLWithAlias("http://another-example.com", "abc123")
 
 	// Assert
-	s.ErrorIs(err, domain.ErrDuplicateKey)
+	s.ErrorIs(err, core.ErrDuplicateKey)
 }
 
 func TestURLUsecase(t *testing.T) {

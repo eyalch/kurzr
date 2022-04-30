@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 	"github.com/eyalch/kurzr/backend/url/repository/memory"
 )
 
 type URLMemoryRepositoryTestSuite struct {
 	suite.Suite
 
-	repo domain.URLRepository
+	repo core.URLRepository
 }
 
 func (s *URLMemoryRepositoryTestSuite) SetupTest() {
@@ -37,7 +37,7 @@ func (s *URLMemoryRepositoryTestSuite) TestGet_NotFound() {
 	_, err := s.repo.Get("abc123")
 
 	// Assert
-	s.ErrorIs(err, domain.ErrKeyNotFound)
+	s.ErrorIs(err, core.ErrKeyNotFound)
 }
 
 func (s *URLMemoryRepositoryTestSuite) TestCreate_Duplicate() {
@@ -49,7 +49,7 @@ func (s *URLMemoryRepositoryTestSuite) TestCreate_Duplicate() {
 	err = s.repo.Create("abc123", "http://another-example.com")
 
 	// Assert
-	s.ErrorIs(err, domain.ErrDuplicateKey)
+	s.ErrorIs(err, core.ErrDuplicateKey)
 }
 
 func TestURLMemoryRepository(t *testing.T) {

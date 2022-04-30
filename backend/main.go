@@ -16,7 +16,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/joho/godotenv/autoload"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 	"github.com/eyalch/kurzr/backend/env"
 	"github.com/eyalch/kurzr/backend/ratelimit"
 	"github.com/eyalch/kurzr/backend/recaptcha"
@@ -39,7 +39,7 @@ func newRedisPool(url string) *redis.Pool {
 	}
 }
 
-func newUrlRepo(redisPool *redis.Pool) domain.URLRepository {
+func newUrlRepo(redisPool *redis.Pool) core.URLRepository {
 	if redisPool == nil {
 		return urlMemoryRepo.NewURLMemoryRepository()
 	}
@@ -49,7 +49,7 @@ func newUrlRepo(redisPool *redis.Pool) domain.URLRepository {
 func newUrlHandler(
 	originUrl *url.URL,
 	redisPool *redis.Pool,
-	recaptchaVerifier domain.ReCAPTCHAVerifier,
+	recaptchaVerifier core.ReCAPTCHAVerifier,
 	logger *log.Logger,
 	isLambda bool,
 ) http.Handler {

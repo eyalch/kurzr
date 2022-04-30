@@ -1,14 +1,14 @@
 package memory
 
 import (
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 )
 
 type urlMemoryRepository struct {
 	urls map[string]string
 }
 
-func NewURLMemoryRepository() domain.URLRepository {
+func NewURLMemoryRepository() core.URLRepository {
 	urls := map[string]string{}
 	return &urlMemoryRepository{urls}
 }
@@ -16,7 +16,7 @@ func NewURLMemoryRepository() domain.URLRepository {
 func (r *urlMemoryRepository) Get(key string) (string, error) {
 	url, exists := r.urls[key]
 	if !exists {
-		return "", domain.ErrKeyNotFound
+		return "", core.ErrKeyNotFound
 	}
 	return url, nil
 }
@@ -24,7 +24,7 @@ func (r *urlMemoryRepository) Get(key string) (string, error) {
 func (r *urlMemoryRepository) Create(key string, url string) error {
 	_, exists := r.urls[key]
 	if exists {
-		return domain.ErrDuplicateKey
+		return core.ErrDuplicateKey
 	}
 
 	r.urls[key] = url

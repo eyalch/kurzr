@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 	"github.com/eyalch/kurzr/backend/ratelimit"
 	urlHandler "github.com/eyalch/kurzr/backend/url/delivery/http"
 	urlKeyGenerator "github.com/eyalch/kurzr/backend/url/keygen"
@@ -24,7 +24,7 @@ import (
 type urlHandlerTestSuite struct {
 	suite.Suite
 
-	uc     domain.URLUsecase
+	uc     core.URLUsecase
 	server *httptest.Server
 }
 

@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/eyalch/kurzr/backend/domain"
+	"github.com/eyalch/kurzr/backend/core"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 
 type urlKeyGenerator struct{}
 
-func NewURLKeyGenerator() domain.URLKeyGenerator {
+func NewURLKeyGenerator() core.URLKeyGenerator {
 	rand.Seed(time.Now().UnixNano())
 	return &urlKeyGenerator{}
 }

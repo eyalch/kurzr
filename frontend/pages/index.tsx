@@ -3,7 +3,7 @@ import React, { PointerEvent, useState } from "react"
 import Form from "../components/Form"
 import Result from "../components/Result"
 
-const IndexPage = () => {
+export default function IndexPage() {
   const [, setUrl] = useState("")
   const [shortUrl, setShortUrl] = useState<string>()
 
@@ -41,5 +41,3 @@ const IndexPage = () => {
     </>
   )
 }
-
-export default IndexPage

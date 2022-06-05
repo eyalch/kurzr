@@ -1,3 +1,4 @@
+import Head from "next/head"
 import React, { PointerEvent, useState } from "react"
 import Form from "../components/Form"
 import Result from "../components/Result"
@@ -19,19 +20,25 @@ const IndexPage = () => {
   }
 
   return (
-    <div className="p-3">
-      <h1 className="text-primary text-5xl text-center font-bold my-7">
-        <a onClick={resetUrl} href="/">
-          kurzr
-        </a>
-      </h1>
+    <>
+      <Head>
+        <title>kurzr</title>
+      </Head>
 
-      {shortUrl ? (
-        <Result shortUrl={shortUrl} />
-      ) : (
-        <Form onSuccess={onSuccess} />
-      )}
-    </div>
+      <div className="p-3">
+        <h1 className="text-primary text-5xl text-center font-bold my-7">
+          <a onClick={resetUrl} href="/">
+            kurzr
+          </a>
+        </h1>
+
+        {shortUrl ? (
+          <Result shortUrl={shortUrl} />
+        ) : (
+          <Form onSuccess={onSuccess} />
+        )}
+      </div>
+    </>
   )
 }
 
